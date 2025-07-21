@@ -397,45 +397,59 @@
                 });
 
                 updateBtn.addEventListener('click', async () => {
-                    console.log('Update button clicked.'); // New log
-                    if (!selectedChemicalId) {
-                        console.log('Update cancelled: no chemical selected.');
-                        return;
-                    }
-                    const chemicalData = getFormData();
-                    console.log('Attempting to update chemical ID:', selectedChemicalId, 'with data:', chemicalData);
-                    const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId).select();
-                    
-                    console.log('Update response:', { data, error });
+                    try {
+                        console.log('Update button clicked. Function entered.');
+                        if (!selectedChemicalId) {
+                            console.log('Update cancelled: no chemical selected.');
+                            return;
+                        }
+                        const chemicalData = getFormData();
+                        console.log('Attempting to update chemical ID:', selectedChemicalId, 'with data:', chemicalData);
+                        const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId).select();
+                        
+                        console.log('Update response from Supabase:', { data, error });
 
-                    if (error) {
-                        console.error('Error updating chemical:', error);
-                        alert(`Failed to update chemical. The database returned an error: ${error.message}`);
-                    } else {
-                        alert('Chemical updated successfully!');
-                        clearFormAndSelection();
+                        if (error) {
+                            console.error('Error updating chemical:', error);
+                            alert(`Failed to update chemical. The database returned an error: ${error.message}`);
+                        } else {
+                            alert('Chemical updated successfully!');
+                            clearFormAndSelection();
+                        }
+                    } catch (e) {
+                         console.error('A critical error occurred inside the updateBtn click handler:', e);
+                         alert('An unexpected error occurred. Please check the console.');
                     }
                 });
 
                 deleteBtn.addEventListener('click', async () => {
-                    console.log('Delete button clicked.'); // New log
-                    if (!selectedChemicalId) {
-                        console.log('Delete cancelled: no chemical selected.');
-                        return;
-                    }
-                    
-                    // The 'confirm' dialog is removed for debugging
-                    console.log('Attempting to delete chemical ID:', selectedChemicalId);
-                    const { error } = await supabase.from(TABLE_NAME).delete().eq('id', selectedChemicalId);
-                    
-                    console.log('Delete response:', { error });
+                    try {
+                        console.log('Delete button clicked. Function entered.');
+                        if (!selectedChemicalId) {
+                            console.log('Delete cancelled: no chemical selected.');
+                            return;
+                        }
+                        
+                        // Restoring confirm() to test if it's the source of the silent failure.
+                        if (confirm('Are you sure you want to delete this chemical?')) {
+                            console.log('User confirmed deletion. Attempting to delete chemical ID:', selectedChemicalId);
+                            const { error } = await supabase.from(TABLE_NAME).delete().eq('id', selectedChemicalId);
+                            
+                            console.log('Delete response from Supabase:', { error });
 
-                    if (error) {
-                        console.error('Error deleting chemical:', error);
-                        alert(`Failed to delete chemical. The database returned an error: ${error.message}`);
-                    } else {
-                        alert('Chemical deleted successfully!');
-                        clearFormAndSelection();
+                            if (error) {
+                                console.error('Error deleting chemical:', error);
+                                alert(`Failed to delete chemical. The database returned an error: ${error.message}`);
+                            } else {
+                                alert('Chemical deleted successfully!');
+                                clearFormAndSelection();
+                            }
+                        } else {
+                            console.log('User cancelled deletion.');
+                        }
+                    } catch (e) {
+                        console.error('A critical error occurred inside the deleteBtn click handler:', e);
+                        alert('An unexpected error occurred. Please check the console.');
                     }
                 });
 
@@ -443,7 +457,7 @@
                     const searchTerm = e.target.value.toLowerCase();
                     const filteredChemicals = chemicalsCache.filter(chem => 
                         (chem.name && chem.name.toLowerCase().includes(searchTerm)) ||
-                        (chem.cas_number && cas_number.toLowerCase().includes(searchTerm)) ||
+                        (chem.cas_number && chem.cas_number.toLowerCase().includes(searchTerm)) ||
                         (chem.location && chem.location.toLowerCase().includes(searchTerm))
                     );
                     renderTable(filteredChemicals);
