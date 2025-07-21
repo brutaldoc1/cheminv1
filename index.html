@@ -82,7 +82,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- IMPORTANT: PASTE YOUR SUPABASE DETAILS HERE ---
-            const SUPABASE_URL = "https://slyedoljsademnnovssw.supabase.co"; // Find this in your Supabase project settings
+            const SUPABASE_URL = "https://slyedoljsademnnovssw.supabase.co
+"; // Find this in your Supabase project settings
             const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc"; // Find this in your Supabase project settings
 
             if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -131,20 +132,26 @@
             };
 
             // --- FIX: Rewrote clearForm and handleRowSelect for robustness ---
-            const clearForm = () => {
+            const clearForm = (deselect = true) => {
                 chemicalForm.reset();
                 docIdInput.value = '';
-                const selectedRow = document.querySelector('.table-row.selected');
-                if (selectedRow) {
-                    selectedRow.classList.remove('selected');
+                if (deselect) {
+                    const selectedRow = document.querySelector('.table-row.selected');
+                    if (selectedRow) {
+                        selectedRow.classList.remove('selected');
+                    }
                 }
             };
             
             const handleRowSelect = (chemical) => {
-                // Clear previous selection and form data
-                clearForm();
+                // First, deselect any currently selected row
+                const currentlySelected = document.querySelector('.table-row.selected');
+                if (currentlySelected) {
+                    currentlySelected.classList.remove('selected');
+                }
 
-                // Populate the form with new data
+                // Then, populate the form with the new data
+                chemicalForm.reset();
                 for (const key in chemical) {
                     if (chemicalForm.elements[key]) {
                         if (key === 'label') {
@@ -163,10 +170,10 @@
                     }
                 }
                 
-                // Set the hidden ID field *after* populating
+                // Set the hidden ID field
                 docIdInput.value = chemical.id;
 
-                // Highlight the new row
+                // Finally, highlight the new row
                 const newSelectedRow = document.querySelector(`[data-id="${chemical.id}"]`);
                 if (newSelectedRow) {
                     newSelectedRow.classList.add('selected');
@@ -276,7 +283,7 @@
             document.getElementById('add-btn').addEventListener('click', addChemical);
             document.getElementById('update-btn').addEventListener('click', updateChemical);
             document.getElementById('delete-btn').addEventListener('click', deleteChemical);
-            document.getElementById('clear-btn').addEventListener('click', clearForm);
+            document.getElementById('clear-btn').addEventListener('click', () => clearForm(true));
 
             searchBar.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
