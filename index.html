@@ -397,7 +397,11 @@
                 });
 
                 updateBtn.addEventListener('click', async () => {
-                    if (!selectedChemicalId) return;
+                    console.log('Update button clicked.'); // New log
+                    if (!selectedChemicalId) {
+                        console.log('Update cancelled: no chemical selected.');
+                        return;
+                    }
                     const chemicalData = getFormData();
                     console.log('Attempting to update chemical ID:', selectedChemicalId, 'with data:', chemicalData);
                     const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId).select();
@@ -414,8 +418,13 @@
                 });
 
                 deleteBtn.addEventListener('click', async () => {
-                    if (!selectedChemicalId || !confirm('Are you sure you want to delete this chemical?')) return;
+                    console.log('Delete button clicked.'); // New log
+                    if (!selectedChemicalId) {
+                        console.log('Delete cancelled: no chemical selected.');
+                        return;
+                    }
                     
+                    // The 'confirm' dialog is removed for debugging
                     console.log('Attempting to delete chemical ID:', selectedChemicalId);
                     const { error } = await supabase.from(TABLE_NAME).delete().eq('id', selectedChemicalId);
                     
@@ -434,7 +443,7 @@
                     const searchTerm = e.target.value.toLowerCase();
                     const filteredChemicals = chemicalsCache.filter(chem => 
                         (chem.name && chem.name.toLowerCase().includes(searchTerm)) ||
-                        (chem.cas_number && chem.cas_number.toLowerCase().includes(searchTerm)) ||
+                        (chem.cas_number && cas_number.toLowerCase().includes(searchTerm)) ||
                         (chem.location && chem.location.toLowerCase().includes(searchTerm))
                     );
                     renderTable(filteredChemicals);
