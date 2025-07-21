@@ -131,26 +131,12 @@
                 });
             };
 
-            // --- FIX: Rewrote clearForm and handleRowSelect for robustness ---
-            const clearForm = (deselect = true) => {
-                chemicalForm.reset();
-                docIdInput.value = '';
-                if (deselect) {
-                    const selectedRow = document.querySelector('.table-row.selected');
-                    if (selectedRow) {
-                        selectedRow.classList.remove('selected');
-                    }
-                }
-            };
-            
             const handleRowSelect = (chemical) => {
-                // First, deselect any currently selected row
                 const currentlySelected = document.querySelector('.table-row.selected');
                 if (currentlySelected) {
                     currentlySelected.classList.remove('selected');
                 }
 
-                // Then, populate the form with the new data
                 chemicalForm.reset();
                 for (const key in chemical) {
                     if (chemicalForm.elements[key]) {
@@ -170,13 +156,22 @@
                     }
                 }
                 
-                // Set the hidden ID field
                 docIdInput.value = chemical.id;
 
-                // Finally, highlight the new row
                 const newSelectedRow = document.querySelector(`[data-id="${chemical.id}"]`);
                 if (newSelectedRow) {
                     newSelectedRow.classList.add('selected');
+                }
+            };
+
+            const clearForm = (deselect = true) => {
+                chemicalForm.reset();
+                docIdInput.value = '';
+                if (deselect) {
+                    const selectedRow = document.querySelector('.table-row.selected');
+                    if (selectedRow) {
+                        selectedRow.classList.remove('selected');
+                    }
                 }
             };
             
@@ -204,16 +199,20 @@
             // --- Data Fetching and CRUD ---
             const fetchInventory = async () => {
                 loadingIndicator.style.display = 'block';
+                loadingIndicator.textContent = 'Loading inventory...';
                 try {
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?select=*`, { headers });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                    }
                     allChemicals = await response.json();
                     renderTable(allChemicals);
+                    loadingIndicator.style.display = 'none'; // Hide on success
                 } catch (error) {
                     console.error("Failed to fetch inventory:", error);
-                    alert("Error: Could not load inventory from the database.");
-                } finally {
-                    loadingIndicator.style.display = 'none';
+                    // --- FIX: Display a more helpful error message in the UI ---
+                    loadingIndicator.textContent = `Error: Could not load inventory. Please check your Supabase settings (URL, Key, and Row Level Security). Details: ${error.message}`;
                 }
             };
 
