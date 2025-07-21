@@ -211,275 +211,243 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- Supabase Configuration ---
-            // IMPORTANT: Replace with your actual Supabase URL and Anon Key
-            const SUPABASE_URL = 'https://slyedoljsademnnovssw.supabase.co
+            try {
+                // --- Supabase Configuration ---
+                // IMPORTANT: Replace with your actual Supabase URL and Anon Key
+                const SUPABASE_URL = 'https://slyedoljsademnnovssw.supabase.co
 ';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc';
+                // IMPORTANT: Make sure this table name matches your table in Supabase exactly.
+                const TABLE_NAME = 'chemicals';
 
-            if (SUPABASE_URL === 'https://slyedoljsademnnovssw.supabase.co
+                if (SUPABASE_URL === 'https://slyedoljsademnnovssw.supabase.co
 ' || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc') {
-                alert('Please update the SUPABASE_URL and SUPABASE_ANON_KEY in the script section.');
-                return;
-            }
-
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-            // --- DOM Element References ---
-            const chemicalForm = document.getElementById('chemical-form');
-            const updateBtn = document.getElementById('update-selected-btn');
-            const deleteBtn = document.getElementById('delete-selected-btn');
-            const clearFormBtn = document.getElementById('clear-form-btn');
-            const inventoryTableBody = document.getElementById('inventory-table-body');
-            const loadingRow = document.getElementById('loading-row');
-            const searchInput = document.getElementById('search-input');
-
-            let chemicalsCache = []; // To store all chemicals for client-side search
-            let selectedChemicalId = null; // To store the ID of the selected chemical
-
-            // --- Functions ---
-
-            /**
-             * Fetches all chemicals from the database and renders them.
-             */
-            async function fetchAndRenderChemicals() {
-                loadingRow.style.display = 'table-row';
-                inventoryTableBody.innerHTML = ''; // Clear existing rows
-                inventoryTableBody.appendChild(loadingRow);
-
-                const { data, error } = await supabase
-                    .from('chemicals')
-                    .select('*')
-                    .order('name', { ascending: true });
-
-                loadingRow.style.display = 'none';
-
-                if (error) {
-                    console.error('Error fetching chemicals:', error);
-                    alert('Could not fetch chemicals. Check the console for errors.');
+                    alert('CRITICAL: Please update the SUPABASE_URL and SUPABASE_ANON_KEY in the script section.');
                     return;
                 }
-                
-                chemicalsCache = data;
-                renderTable(chemicalsCache);
-            }
 
-            /**
-             * Renders an array of chemical objects into the table.
-             * @param {Array<object>} chemicals - The array of chemicals to render.
-             */
-            function renderTable(chemicals) {
-                inventoryTableBody.innerHTML = ''; // Clear table
-                if (chemicals.length === 0 && loadingRow.style.display === 'none') {
-                     inventoryTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No chemicals found.</td></tr>';
-                } else {
-                    chemicals.forEach(chemical => {
-                        const row = createTableRow(chemical);
-                        inventoryTableBody.appendChild(row);
-                    });
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase client initialized:', supabase);
+
+                // --- DOM Element References ---
+                const chemicalForm = document.getElementById('chemical-form');
+                const updateBtn = document.getElementById('update-selected-btn');
+                const deleteBtn = document.getElementById('delete-selected-btn');
+                const clearFormBtn = document.getElementById('clear-form-btn');
+                const inventoryTableBody = document.getElementById('inventory-table-body');
+                const loadingRow = document.getElementById('loading-row');
+                const searchInput = document.getElementById('search-input');
+
+                let chemicalsCache = []; // To store all chemicals for client-side search
+                let selectedChemicalId = null; // To store the ID of the selected chemical
+
+                // --- Functions ---
+
+                /**
+                 * Fetches all chemicals from the database and renders them.
+                 */
+                async function fetchAndRenderChemicals() {
+                    console.log(`Fetching data from table: ${TABLE_NAME}...`);
+                    loadingRow.style.display = 'table-row';
+                    inventoryTableBody.innerHTML = ''; 
+                    inventoryTableBody.appendChild(loadingRow);
+
+                    const { data, error } = await supabase
+                        .from(TABLE_NAME)
+                        .select('*')
+                        .order('name', { ascending: true });
+
+                    loadingRow.style.display = 'none';
+                    
+                    // Log the result from Supabase for debugging
+                    console.log('Fetch result:', { data, error });
+
+                    if (error) {
+                        console.error('Error fetching chemicals:', error);
+                        alert(`Could not fetch chemicals. Check the browser console (F12 or Right-click > Inspect > Console) for the specific error message. Common issues are incorrect table name or RLS policies.`);
+                        return;
+                    }
+
+                    if (data === null) {
+                        console.warn('Fetched data is null. This might be due to RLS policies blocking access.');
+                        alert('Received no data from the database. Please ensure Row Level Security (RLS) is disabled or a read policy is active for the table.');
+                    }
+                    
+                    chemicalsCache = data || [];
+                    renderTable(chemicalsCache);
                 }
-            }
 
-            /**
-             * Creates a table row element for a single chemical.
-             * @param {object} chemical - The chemical data.
-             * @returns {HTMLTableRowElement} The created table row.
-             */
-            function createTableRow(chemical) {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 cursor-pointer';
-                row.dataset.id = chemical.id; // Store ID for selection
-
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${chemical.name || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.cas_number || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.percent_full || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.location || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.manufacturer || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.date_arrived ? new Date(chemical.date_arrived).toLocaleDateString() : ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.label ? 'Yes' : 'No'}</td>
-                `;
-
-                // Event listener for row selection
-                row.addEventListener('click', () => handleRowSelect(chemical, row));
-                return row;
-            }
-
-            /**
-             * Handles the selection of a table row.
-             * @param {object} chemical - The selected chemical's data.
-             * @param {HTMLTableRowElement} rowElement - The clicked row element.
-             */
-            function handleRowSelect(chemical, rowElement) {
-                selectedChemicalId = chemical.id;
-
-                // Highlight selected row
-                document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
-                rowElement.classList.add('row-selected');
-
-                // Populate form with data
-                populateForm(chemical);
-
-                // Enable update and delete buttons
-                updateBtn.disabled = false;
-                deleteBtn.disabled = false;
-            }
-
-            /**
-             * Populates the form with data from a selected chemical.
-             * @param {object} chemical - The chemical data.
-             */
-            function populateForm(chemical) {
-                // Helper to format date for input[type="date"]
-                const formatDate = (dateString) => dateString ? dateString.split('T')[0] : '';
-                
-                chemicalForm.elements['name'].value = chemical.name || '';
-                chemicalForm.elements['cas_number'].value = chemical.cas_number || '';
-                chemicalForm.elements['location'].value = chemical.location || '';
-                chemicalForm.elements['manufacturer'].value = chemical.manufacturer || '';
-                chemicalForm.elements['quantity'].value = chemical.quantity || '';
-                chemicalForm.elements['percent_full'].value = chemical.percent_full || '';
-                chemicalForm.elements['amount'].value = chemical.amount || '';
-                chemicalForm.elements['price'].value = chemical.price || '';
-                chemicalForm.elements['to_order'].value = chemical.to_order || '';
-                chemicalForm.elements['molecular_weight'].value = chemical.molecular_weight || '';
-                chemicalForm.elements['msds_url'].value = chemical.msds_url || '';
-                chemicalForm.elements['date_arrived'].value = formatDate(chemical.date_arrived);
-                chemicalForm.elements['date_opened'].value = formatDate(chemical.date_opened);
-                chemicalForm.elements['date_expired'].value = formatDate(chemical.date_expired);
-                chemicalForm.elements['barcode'].value = chemical.barcode || '';
-                chemicalForm.elements['label'].value = chemical.label ? 'true' : 'false';
-                chemicalForm.elements['comment'].value = chemical.comment || '';
-            }
-            
-            /**
-             * Clears all fields in the chemical form and resets selection state.
-             */
-            function clearFormAndSelection() {
-                chemicalForm.reset();
-                selectedChemicalId = null;
-
-                // Deselect rows and disable buttons
-                document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
-                updateBtn.disabled = true;
-                deleteBtn.disabled = true;
-            }
-
-            /**
-             * Gathers form data and prepares it for Supabase.
-             * @returns {object} The chemical data object.
-             */
-            function getFormData() {
-                const formData = new FormData(chemicalForm);
-                const chemicalData = {};
-                for (const [key, value] of formData.entries()) {
-                    // Convert empty strings to null for database compatibility, especially for dates
-                    if (value === '') {
-                        chemicalData[key] = null;
+                /**
+                 * Renders an array of chemical objects into the table.
+                 * @param {Array<object>} chemicals - The array of chemicals to render.
+                 */
+                function renderTable(chemicals) {
+                    inventoryTableBody.innerHTML = ''; // Clear table
+                    if (chemicals.length === 0 && loadingRow.style.display === 'none') {
+                         inventoryTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">No chemicals found in table '${TABLE_NAME}'.</td></tr>`;
                     } else {
-                        chemicalData[key] = value;
+                        chemicals.forEach(chemical => {
+                            const row = createTableRow(chemical);
+                            inventoryTableBody.appendChild(row);
+                        });
                     }
                 }
-                // Convert label to boolean
-                chemicalData.label = chemicalData.label === 'true';
-                return chemicalData;
+
+                /**
+                 * Creates a table row element for a single chemical.
+                 * @param {object} chemical - The chemical data.
+                 * @returns {HTMLTableRowElement} The created table row.
+                 */
+                function createTableRow(chemical) {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 cursor-pointer';
+                    row.dataset.id = chemical.id; // Store ID for selection
+
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${chemical.name || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.cas_number || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.percent_full || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.location || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.manufacturer || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.date_arrived ? new Date(chemical.date_arrived).toLocaleDateString() : ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.label ? 'Yes' : 'No'}</td>
+                    `;
+
+                    row.addEventListener('click', () => handleRowSelect(chemical, row));
+                    return row;
+                }
+
+                /**
+                 * Handles the selection of a table row.
+                 * @param {object} chemical - The selected chemical's data.
+                 * @param {HTMLTableRowElement} rowElement - The clicked row element.
+                 */
+                function handleRowSelect(chemical, rowElement) {
+                    selectedChemicalId = chemical.id;
+                    document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
+                    rowElement.classList.add('row-selected');
+                    populateForm(chemical);
+                    updateBtn.disabled = false;
+                    deleteBtn.disabled = false;
+                }
+
+                /**
+                 * Populates the form with data from a selected chemical.
+                 * @param {object} chemical - The chemical data.
+                 */
+                function populateForm(chemical) {
+                    const formatDate = (dateString) => dateString ? dateString.split('T')[0] : '';
+                    
+                    chemicalForm.elements['name'].value = chemical.name || '';
+                    chemicalForm.elements['cas_number'].value = chemical.cas_number || '';
+                    chemicalForm.elements['location'].value = chemical.location || '';
+                    chemicalForm.elements['manufacturer'].value = chemical.manufacturer || '';
+                    chemicalForm.elements['quantity'].value = chemical.quantity || '';
+                    chemicalForm.elements['percent_full'].value = chemical.percent_full || '';
+                    chemicalForm.elements['amount'].value = chemical.amount || '';
+                    chemicalForm.elements['price'].value = chemical.price || '';
+                    chemicalForm.elements['to_order'].value = chemical.to_order || '';
+                    chemicalForm.elements['molecular_weight'].value = chemical.molecular_weight || '';
+                    chemicalForm.elements['msds_url'].value = chemical.msds_url || '';
+                    chemicalForm.elements['date_arrived'].value = formatDate(chemical.date_arrived);
+                    chemicalForm.elements['date_opened'].value = formatDate(chemical.date_opened);
+                    chemicalForm.elements['date_expired'].value = formatDate(chemical.date_expired);
+                    chemicalForm.elements['barcode'].value = chemical.barcode || '';
+                    chemicalForm.elements['label'].value = chemical.label ? 'true' : 'false';
+                    chemicalForm.elements['comment'].value = chemical.comment || '';
+                }
+                
+                function clearFormAndSelection() {
+                    chemicalForm.reset();
+                    selectedChemicalId = null;
+                    document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
+                    updateBtn.disabled = true;
+                    deleteBtn.disabled = true;
+                }
+
+                function getFormData() {
+                    const formData = new FormData(chemicalForm);
+                    const chemicalData = {};
+                    for (const [key, value] of formData.entries()) {
+                        if (value === '') {
+                            chemicalData[key] = null;
+                        } else {
+                            chemicalData[key] = value;
+                        }
+                    }
+                    chemicalData.label = chemicalData.label === 'true';
+                    return chemicalData;
+                }
+
+                // --- Event Handlers ---
+                chemicalForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const chemicalData = getFormData();
+                    if (!chemicalData.name || !chemicalData.cas_number) {
+                        alert('Please fill in at least the Name and CAS Number.');
+                        return;
+                    }
+                    const { error } = await supabase.from(TABLE_NAME).insert([chemicalData]);
+                    if (error) {
+                        console.error('Error adding chemical:', error);
+                        alert('Failed to add chemical. Check console for details.');
+                    } else {
+                        clearFormAndSelection();
+                    }
+                });
+
+                updateBtn.addEventListener('click', async () => {
+                    if (!selectedChemicalId) return;
+                    const chemicalData = getFormData();
+                    const { error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId);
+                    if (error) {
+                        console.error('Error updating chemical:', error);
+                        alert('Failed to update chemical. Check console for details.');
+                    } else {
+                        clearFormAndSelection();
+                    }
+                });
+
+                deleteBtn.addEventListener('click', async () => {
+                    if (!selectedChemicalId || !confirm('Are you sure you want to delete this chemical?')) return;
+                    const { error } = await supabase.from(TABLE_NAME).delete().eq('id', selectedChemicalId);
+                    if (error) {
+                        console.error('Error deleting chemical:', error);
+                        alert('Failed to delete chemical. Check console for details.');
+                    } else {
+                        clearFormAndSelection();
+                    }
+                });
+
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const filteredChemicals = chemicalsCache.filter(chem => 
+                        (chem.name && chem.name.toLowerCase().includes(searchTerm)) ||
+                        (chem.cas_number && chem.cas_number.toLowerCase().includes(searchTerm)) ||
+                        (chem.location && chem.location.toLowerCase().includes(searchTerm))
+                    );
+                    renderTable(filteredChemicals);
+                });
+
+                clearFormBtn.addEventListener('click', clearFormAndSelection);
+
+                // --- Real-time Subscription ---
+                supabase.channel(`public:${TABLE_NAME}`)
+                  .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, payload => {
+                    console.log('Real-time change received!', payload);
+                    fetchAndRenderChemicals();
+                  })
+                  .subscribe((status, err) => {
+                      console.log(`Real-time subscription status: ${status}`, err || '');
+                  });
+
+                // --- Initial Load ---
+                await fetchAndRenderChemicals();
+
+            } catch (e) {
+                console.error('A critical error occurred during script initialization:', e);
+                alert('A critical error occurred. Please check the console for details.');
             }
-
-            // --- Event Handlers ---
-
-            /**
-             * Handles form submission to add a new chemical.
-             */
-            chemicalForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const chemicalData = getFormData();
-
-                if (!chemicalData.name || !chemicalData.cas_number) {
-                    alert('Please fill in at least the Name and CAS Number.');
-                    return;
-                }
-
-                const { error } = await supabase.from('chemicals').insert([chemicalData]);
-
-                if (error) {
-                    console.error('Error adding chemical:', error);
-                    alert('Failed to add chemical.');
-                } else {
-                    // No need to manually add to table, real-time subscription will handle it
-                    clearFormAndSelection();
-                }
-            });
-
-            /**
-             * Handles updating the selected chemical.
-             */
-            updateBtn.addEventListener('click', async () => {
-                if (!selectedChemicalId) return;
-
-                const chemicalData = getFormData();
-                const { error } = await supabase
-                    .from('chemicals')
-                    .update(chemicalData)
-                    .eq('id', selectedChemicalId);
-
-                if (error) {
-                    console.error('Error updating chemical:', error);
-                    alert('Failed to update chemical.');
-                } else {
-                    // Real-time will update the table
-                    clearFormAndSelection();
-                }
-            });
-
-            /**
-             * Handles deleting the selected chemical.
-             */
-            deleteBtn.addEventListener('click', async () => {
-                if (!selectedChemicalId || !confirm('Are you sure you want to delete this chemical?')) {
-                    return;
-                }
-
-                const { error } = await supabase
-                    .from('chemicals')
-                    .delete()
-                    .eq('id', selectedChemicalId);
-
-                if (error) {
-                    console.error('Error deleting chemical:', error);
-                    alert('Failed to delete chemical.');
-                } else {
-                    // Real-time will remove from table
-                    clearFormAndSelection();
-                }
-            });
-
-            /**
-             * Handles client-side search filtering.
-             */
-            searchInput.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                const filteredChemicals = chemicalsCache.filter(chem => 
-                    (chem.name && chem.name.toLowerCase().includes(searchTerm)) ||
-                    (chem.cas_number && chem.cas_number.toLowerCase().includes(searchTerm)) ||
-                    (chem.location && chem.location.toLowerCase().includes(searchTerm))
-                );
-                renderTable(filteredChemicals);
-            });
-
-            clearFormBtn.addEventListener('click', clearFormAndSelection);
-
-            // --- Real-time Subscription ---
-            supabase.channel('public:chemicals')
-              .on('postgres_changes', { event: '*', schema: 'public', table: 'chemicals' }, payload => {
-                console.log('Change received!', payload);
-                // Refetch all data to ensure consistency.
-                // For more complex apps, you could handle INSERT, UPDATE, DELETE individually.
-                fetchAndRenderChemicals();
-              })
-              .subscribe();
-
-            // --- Initial Load ---
-            await fetchAndRenderChemicals();
         });
     </script>
 
