@@ -309,7 +309,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.percent_full || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.location || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.manufacturer || ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.date_arrived ? new Date(chemical.date_arrived).toLocaleDateString() : ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.date_arrived ? chemical.date_arrived.split('T')[0] : ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.label ? 'Yes' : 'No'}</td>
                     `;
 
