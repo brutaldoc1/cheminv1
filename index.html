@@ -392,6 +392,7 @@
                         alert('Failed to add chemical. Check console for details.');
                     } else {
                         clearFormAndSelection();
+                        fetchAndRenderChemicals(); // Refresh table
                     }
                 });
 
@@ -415,8 +416,8 @@
                             console.error('Error updating chemical:', error);
                             alert(`Failed to update chemical. Error: ${error.message}`);
                         } else {
-                            alert('Chemical updated successfully!');
                             clearFormAndSelection();
+                            fetchAndRenderChemicals(); // Refresh table
                         }
                     } catch (e) {
                          console.error('A critical error occurred in updateBtn handler:', e);
@@ -444,8 +445,8 @@
                                 console.error('Error deleting chemical:', error);
                                 alert(`Failed to delete chemical. Error: ${error.message}`);
                             } else {
-                                alert('Chemical deleted successfully!');
                                 clearFormAndSelection();
+                                fetchAndRenderChemicals(); // Refresh table
                             }
                         } else {
                             console.log('User cancelled deletion.');
@@ -469,6 +470,7 @@
                 clearFormBtn.addEventListener('click', clearFormAndSelection);
 
                 // --- Real-time Subscription ---
+                // This will update the table if another user makes a change.
                 supabase.channel(`public:${TABLE_NAME}`)
                   .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, payload => {
                     console.log('Real-time change received!', payload);
