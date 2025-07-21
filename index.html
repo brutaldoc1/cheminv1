@@ -46,11 +46,11 @@
                 <div><label for="date_expired" class="form-label">Date Expired</label><input type="date" id="date_expired" name="date_expired" class="w-full p-2 rounded-md form-input"></div>
                 <div><label for="barcode" class="form-label">Barcode</label><input type="text" id="barcode" name="barcode" class="w-full p-2 rounded-md form-input"></div>
                 <div>
-                    <label for="label" class="form-label">Label (Yes/No)</label>
+                    <label for="label" class="form-label">Label (Y/N)</label>
                     <select id="label" name="label" class="w-full p-2 rounded-md form-select">
                         <option value=""></option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                     </select>
                 </div>
                 <div class="col-span-2"><label for="comment" class="form-label">Comment</label><textarea id="comment" name="comment" rows="4" class="w-full p-2 rounded-md form-textarea"></textarea></div>
@@ -118,13 +118,13 @@
                     row.className = 'table-row border-b border-gray-200 cursor-pointer';
                     row.dataset.id = chem.id;
                     
-                    const dateArrived = chem.date_arrived ? new Date(chem.date_arrived).toISOString().split('T')[0] : '';
+                    const dateArrived = chem.date_arrived ? chem.date_arrived.split('T')[0] : '';
 
                     row.innerHTML = `
                         <td class="p-3">${chem.name || ''}</td><td class="p-3">${chem.cas_number || ''}</td>
                         <td class="p-3">${chem.percent_full || ''}</td><td class="p-3">${chem.location || ''}</td>
                         <td class="p-3">${chem.manufacturer || ''}</td><td class="p-3">${dateArrived}</td>
-                        <td class="p-3">${chem.label === true ? 'Y' : chem.label === false ? 'N' : ''}</td>
+                        <td class="p-3">${chem.label || ''}</td>
                     `;
                     row.addEventListener('click', () => handleRowSelect(chem));
                     tableBody.appendChild(row);
@@ -132,36 +132,19 @@
             };
 
             const handleRowSelect = (chemical) => {
-                const currentlySelected = document.querySelector('.table-row.selected');
-                if (currentlySelected) {
-                    currentlySelected.classList.remove('selected');
-                }
-
-                chemicalForm.reset();
+                clearForm(false);
                 for (const key in chemical) {
                     if (chemicalForm.elements[key]) {
-                        if (key === 'label') {
-                            if (chemical[key] === true) {
-                                chemicalForm.elements[key].value = 'true';
-                            } else if (chemical[key] === false) {
-                                chemicalForm.elements[key].value = 'false';
-                            } else {
-                                chemicalForm.elements[key].value = '';
-                            }
-                        } else if (['date_arrived', 'date_opened', 'date_expired'].includes(key) && chemical[key]) {
-                            chemicalForm.elements[key].value = new Date(chemical[key]).toISOString().split('T')[0];
+                        const value = chemical[key] || '';
+                        if (['date_arrived', 'date_opened', 'date_expired'].includes(key) && value) {
+                            chemicalForm.elements[key].value = value.split('T')[0];
                         } else {
-                            chemicalForm.elements[key].value = chemical[key] || '';
+                            chemicalForm.elements[key].value = value;
                         }
                     }
                 }
-                
-                docIdInput.value = chemical.id;
-
-                const newSelectedRow = document.querySelector(`[data-id="${chemical.id}"]`);
-                if (newSelectedRow) {
-                    newSelectedRow.classList.add('selected');
-                }
+                document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
+                document.querySelector(`[data-id="${chemical.id}"]`).classList.add('selected');
             };
 
             const clearForm = (deselect = true) => {
@@ -169,33 +152,10 @@
                 docIdInput.value = '';
                 if (deselect) {
                     const selectedRow = document.querySelector('.table-row.selected');
-                    if (selectedRow) {
-                        selectedRow.classList.remove('selected');
-                    }
+                    if (selectedRow) selectedRow.classList.remove('selected');
                 }
             };
             
-            const getSanitizedFormData = () => {
-                const formData = new FormData(chemicalForm);
-                const data = Object.fromEntries(formData.entries());
-                
-                if (data.label === 'true') {
-                    data.label = true;
-                } else if (data.label === 'false') {
-                    data.label = false;
-                } else {
-                    data.label = null; 
-                }
-
-                ['date_arrived', 'date_opened', 'date_expired'].forEach(key => {
-                    if (data[key] === '') {
-                        data[key] = null;
-                    }
-                });
-
-                return data;
-            };
-
             // --- Data Fetching and CRUD ---
             const fetchInventory = async () => {
                 loadingIndicator.style.display = 'block';
@@ -208,16 +168,16 @@
                     }
                     allChemicals = await response.json();
                     renderTable(allChemicals);
-                    loadingIndicator.style.display = 'none'; // Hide on success
+                    loadingIndicator.style.display = 'none';
                 } catch (error) {
                     console.error("Failed to fetch inventory:", error);
-                    // --- FIX: Display a more helpful error message in the UI ---
                     loadingIndicator.textContent = `Error: Could not load inventory. Please check your Supabase settings (URL, Key, and Row Level Security). Details: ${error.message}`;
                 }
             };
 
             const addChemical = async () => {
-                const data = getSanitizedFormData();
+                const formData = new FormData(chemicalForm);
+                const data = Object.fromEntries(formData.entries());
                 delete data.id;
                 if (!data.name || !data.cas_number) {
                     alert("Please provide a Name and CAS Number.");
@@ -242,7 +202,8 @@
                     alert("Please select a chemical from the table to update.");
                     return;
                 }
-                const data = getSanitizedFormData();
+                const formData = new FormData(chemicalForm);
+                const data = Object.fromEntries(formData.entries());
                 delete data.id;
                 try {
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${id}`, {
