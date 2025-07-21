@@ -16,6 +16,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            font-size: 1.025rem; /* Slightly increased font size */
         }
         /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
@@ -59,13 +60,13 @@
                 <form id="chemical-form" class="space-y-4">
                     <!-- Form fields -->
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Name*</label>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
                         <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="cas_number" class="block text-sm font-medium text-gray-700">CAS Number*</label>
+                            <label for="cas_number" class="block text-sm font-medium text-gray-700">CAS Number</label>
                             <input type="text" id="cas_number" name="cas_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         </div>
                         <div>
@@ -107,16 +108,14 @@
                         </div>
                     </div>
                     
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div>
-                                <label for="molecular_weight" class="block text-sm font-medium text-gray-700">Molecular Weight</label>
-                                <input type="text" id="molecular_weight" name="molecular_weight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            </div>
-                            <div>
-                                <label for="msds_url" class="block text-sm font-medium text-gray-700">MSDS URL</label>
-                                <input type="text" id="msds_url" name="msds_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label for="molecular_weight" class="block text-sm font-medium text-gray-700">Molecular Weight</label>
+                            <input type="text" id="molecular_weight" name="molecular_weight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="msds_url" class="block text-sm font-medium text-gray-700">MSDS URL</label>
+                            <input type="text" id="msds_url" name="msds_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         </div>
                     </div>
 
