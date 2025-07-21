@@ -213,15 +213,17 @@
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // --- Supabase Configuration ---
-                // IMPORTANT: Replace with your actual Supabase URL and Anon Key
-                const SUPABASE_URL = 'https://slyedoljsademnnovssw.supabase.co
-';
-                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc';
+                // PASTE YOUR SUPABASE URL AND ANON KEY BELOW
+                // Make sure to paste them between the backticks (`)
+                const SUPABASE_URL = `https://slyedoljsademnnovssw.supabase.co
+`;
+                const SUPABASE_ANON_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc`;
+                
                 // IMPORTANT: Make sure this table name matches your table in Supabase exactly.
                 const TABLE_NAME = 'chemicals';
 
-                if (SUPABASE_URL === 'https://slyedoljsademnnovssw.supabase.co
-' || SUPABASE_ANON_KEY === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc') {
+                if (SUPABASE_URL === `https://slyedoljsademnnovssw.supabase.co
+` || SUPABASE_ANON_KEY === `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc`) {
                     alert('CRITICAL: Please update the SUPABASE_URL and SUPABASE_ANON_KEY in the script section.');
                     return;
                 }
