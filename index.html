@@ -239,7 +239,6 @@
                 const searchInput = document.getElementById('search-input');
 
                 let chemicalsCache = []; // To store all chemicals for client-side search
-                let selectedChemicalId = null; // To store the ID of the selected chemical
 
                 // --- Functions ---
 
@@ -323,7 +322,7 @@
                  * @param {HTMLTableRowElement} rowElement - The clicked row element.
                  */
                 function handleRowSelect(chemical, rowElement) {
-                    selectedChemicalId = chemical.id;
+                    // The 'row-selected' class is now the source of truth for the selection state.
                     document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
                     rowElement.classList.add('row-selected');
                     populateForm(chemical);
@@ -359,7 +358,7 @@
                 
                 function clearFormAndSelection() {
                     chemicalForm.reset();
-                    selectedChemicalId = null;
+                    // No longer need to reset a global variable.
                     document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
                     updateBtn.disabled = true;
                     deleteBtn.disabled = true;
@@ -399,13 +398,19 @@
                 updateBtn.addEventListener('click', async () => {
                     try {
                         console.log('Update button clicked. Function entered.');
-                        if (!selectedChemicalId) {
-                            console.log('Update cancelled: no chemical selected.');
+                        const selectedRow = document.querySelector('.row-selected');
+                        
+                        if (!selectedRow) {
+                            console.log('Update cancelled: no row is selected in the UI.');
+                            alert('Please select a chemical from the table to update.');
                             return;
                         }
+                        
+                        const chemicalIdToUpdate = selectedRow.dataset.id;
                         const chemicalData = getFormData();
-                        console.log('Attempting to update chemical ID:', selectedChemicalId, 'with data:', chemicalData);
-                        const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId).select();
+                        
+                        console.log('Attempting to update chemical ID:', chemicalIdToUpdate, 'with data:', chemicalData);
+                        const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', chemicalIdToUpdate).select();
                         
                         console.log('Update response from Supabase:', { data, error });
 
@@ -425,15 +430,20 @@
                 deleteBtn.addEventListener('click', async () => {
                     try {
                         console.log('Delete button clicked. Function entered.');
-                        if (!selectedChemicalId) {
-                            console.log('Delete cancelled: no chemical selected.');
+                        const selectedRow = document.querySelector('.row-selected');
+
+                        if (!selectedRow) {
+                            console.log('Delete cancelled: no row is selected in the UI.');
+                            alert('Please select a chemical from the table to delete.');
                             return;
                         }
                         
-                        // Restoring confirm() to test if it's the source of the silent failure.
+                        const chemicalIdToDelete = selectedRow.dataset.id;
+                        console.log('Found selected row with ID:', chemicalIdToDelete);
+                        
                         if (confirm('Are you sure you want to delete this chemical?')) {
-                            console.log('User confirmed deletion. Attempting to delete chemical ID:', selectedChemicalId);
-                            const { error } = await supabase.from(TABLE_NAME).delete().eq('id', selectedChemicalId);
+                            console.log('User confirmed deletion. Attempting to delete chemical ID:', chemicalIdToDelete);
+                            const { error } = await supabase.from(TABLE_NAME).delete().eq('id', chemicalIdToDelete);
                             
                             console.log('Delete response from Supabase:', { error });
 
