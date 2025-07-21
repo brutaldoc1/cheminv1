@@ -399,22 +399,33 @@
                 updateBtn.addEventListener('click', async () => {
                     if (!selectedChemicalId) return;
                     const chemicalData = getFormData();
-                    const { error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId);
+                    console.log('Attempting to update chemical ID:', selectedChemicalId, 'with data:', chemicalData);
+                    const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', selectedChemicalId).select();
+                    
+                    console.log('Update response:', { data, error });
+
                     if (error) {
                         console.error('Error updating chemical:', error);
-                        alert('Failed to update chemical. Check console for details.');
+                        alert(`Failed to update chemical. The database returned an error: ${error.message}`);
                     } else {
+                        alert('Chemical updated successfully!');
                         clearFormAndSelection();
                     }
                 });
 
                 deleteBtn.addEventListener('click', async () => {
                     if (!selectedChemicalId || !confirm('Are you sure you want to delete this chemical?')) return;
+                    
+                    console.log('Attempting to delete chemical ID:', selectedChemicalId);
                     const { error } = await supabase.from(TABLE_NAME).delete().eq('id', selectedChemicalId);
+                    
+                    console.log('Delete response:', { error });
+
                     if (error) {
                         console.error('Error deleting chemical:', error);
-                        alert('Failed to delete chemical. Check console for details.');
+                        alert(`Failed to delete chemical. The database returned an error: ${error.message}`);
                     } else {
+                        alert('Chemical deleted successfully!');
                         clearFormAndSelection();
                     }
                 });
