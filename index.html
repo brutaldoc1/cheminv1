@@ -13,13 +13,25 @@
         .form-input:focus, .form-textarea:focus, .form-select:focus { background-color: white; border-color: #4299E1; box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); outline: none; }
         .table-header { background-color: #EDF2F7; color: #2D3748; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         .table-row:hover { background-color: #F7FAFC; }
-        .table-row.selected { background-color: #3182CE; color: white; }
+        .table-row.selected { background-color: #3182CE !important; color: white; }
+        .table-row.selected td { color: white; }
         .btn-primary { background-color: #3182CE; color: white; }
         .btn-primary:hover { background-color: #2B6CB0; }
         .btn-danger { background-color: #E53E3E; color: white; }
         .btn-danger:hover { background-color: #C53030; }
         .btn-secondary { background-color: #718096; color: white; }
         .btn-secondary:hover { background-color: #4A5568; }
+        .status-message { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            padding: 12px 20px; 
+            border-radius: 6px; 
+            z-index: 1000; 
+            font-weight: 500;
+        }
+        .status-success { background-color: #48BB78; color: white; }
+        .status-error { background-color: #E53E3E; color: white; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -30,35 +42,83 @@
             <h2 class="text-2xl font-bold mb-6 text-gray-700 border-b pb-4">Chemical Details</h2>
             <form id="chemical-form" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 
-                <div class="col-span-2"><label for="name" class="form-label">Name*</label><input type="text" id="name" name="name" class="w-full p-2 rounded-md form-input" required></div>
-                <div><label for="cas_number" class="form-label">CAS Number*</label><input type="text" id="cas_number" name="cas_number" class="w-full p-2 rounded-md form-input" required></div>
-                <div><label for="location" class="form-label">Location</label><input type="text" id="location" name="location" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="manufacturer" class="form-label">Manufacturer</label><input type="text" id="manufacturer" name="manufacturer" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="quantity" class="form-label">Quantity</label><input type="text" id="quantity" name="quantity" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="percent_full" class="form-label">Percent Full (%)</label><input type="number" id="percent_full" name="percent_full" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="amount" class="form-label">Amount</label><input type="text" id="amount" name="amount" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="price" class="form-label">Price (KRW)</label><input type="text" id="price" name="price" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="to_order" class="form-label">To Order?</label><input type="text" id="to_order" name="to_order" class="w-full p-2 rounded-md form-input"></div>
-                <div class="col-span-2"><label for="molecular_weight" class="form-label">Molecular Weight</label><input type="text" id="molecular_weight" name="molecular_weight" class="w-full p-2 rounded-md form-input"></div>
-                <div class="col-span-2"><label for="msds_url" class="form-label">MSDS URL</label><input type="url" id="msds_url" name="msds_url" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="date_arrived" class="form-label">Date Arrived</label><input type="date" id="date_arrived" name="date_arrived" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="date_opened" class="form-label">Date Opened</label><input type="date" id="date_opened" name="date_opened" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="date_expired" class="form-label">Date Expired</label><input type="date" id="date_expired" name="date_expired" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="barcode" class="form-label">Barcode</label><input type="text" id="barcode" name="barcode" class="w-full p-2 rounded-md form-input"></div>
+                <div class="col-span-2">
+                    <label for="name" class="form-label block mb-1">Name*</label>
+                    <input type="text" id="name" name="name" class="w-full p-2 rounded-md form-input" required>
+                </div>
                 <div>
-                    <label for="label" class="form-label">Label (Y/N)</label>
+                    <label for="cas_number" class="form-label block mb-1">CAS Number*</label>
+                    <input type="text" id="cas_number" name="cas_number" class="w-full p-2 rounded-md form-input" required>
+                </div>
+                <div>
+                    <label for="location" class="form-label block mb-1">Location</label>
+                    <input type="text" id="location" name="location" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="manufacturer" class="form-label block mb-1">Manufacturer</label>
+                    <input type="text" id="manufacturer" name="manufacturer" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="quantity" class="form-label block mb-1">Quantity</label>
+                    <input type="text" id="quantity" name="quantity" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="percent_full" class="form-label block mb-1">Percent Full (%)</label>
+                    <input type="number" id="percent_full" name="percent_full" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="amount" class="form-label block mb-1">Amount</label>
+                    <input type="text" id="amount" name="amount" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="price" class="form-label block mb-1">Price (KRW)</label>
+                    <input type="text" id="price" name="price" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="to_order" class="form-label block mb-1">To Order?</label>
+                    <input type="text" id="to_order" name="to_order" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div class="col-span-2">
+                    <label for="molecular_weight" class="form-label block mb-1">Molecular Weight</label>
+                    <input type="text" id="molecular_weight" name="molecular_weight" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div class="col-span-2">
+                    <label for="msds_url" class="form-label block mb-1">MSDS URL</label>
+                    <input type="url" id="msds_url" name="msds_url" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="date_arrived" class="form-label block mb-1">Date Arrived</label>
+                    <input type="date" id="date_arrived" name="date_arrived" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="date_opened" class="form-label block mb-1">Date Opened</label>
+                    <input type="date" id="date_opened" name="date_opened" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="date_expired" class="form-label block mb-1">Date Expired</label>
+                    <input type="date" id="date_expired" name="date_expired" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="barcode" class="form-label block mb-1">Barcode</label>
+                    <input type="text" id="barcode" name="barcode" class="w-full p-2 rounded-md form-input">
+                </div>
+                <div>
+                    <label for="label" class="form-label block mb-1">Label (Y/N)</label>
                     <select id="label" name="label" class="w-full p-2 rounded-md form-select">
                         <option value=""></option>
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                     </select>
                 </div>
-                <div class="col-span-2"><label for="comment" class="form-label">Comment</label><textarea id="comment" name="comment" rows="4" class="w-full p-2 rounded-md form-textarea"></textarea></div>
+                <div class="col-span-2">
+                    <label for="comment" class="form-label block mb-1">Comment</label>
+                    <textarea id="comment" name="comment" rows="4" class="w-full p-2 rounded-md form-textarea"></textarea>
+                </div>
                 <input type="hidden" id="id" name="id">
                 <div class="col-span-2 grid grid-cols-2 gap-4 pt-4">
                      <button type="button" id="add-btn" class="w-full p-3 rounded-md btn-primary font-semibold">Add Chemical</button>
-                     <button type="button" id="update-btn" class="w-full p-3 rounded-md btn-primary font-semibold">Update Selected</button>
-                     <button type="button" id="delete-btn" class="w-full p-3 rounded-md btn-danger font-semibold">Delete Selected</button>
+                     <button type="button" id="update-btn" class="w-full p-3 rounded-md btn-primary font-semibold" disabled>Update Selected</button>
+                     <button type="button" id="delete-btn" class="w-full p-3 rounded-md btn-danger font-semibold" disabled>Delete Selected</button>
                      <button type="button" id="clear-btn" class="w-full p-3 rounded-md btn-secondary font-semibold">Clear Form</button>
                 </div>
             </form>
@@ -67,13 +127,25 @@
         <!-- Right Panel: Table -->
         <div class="w-full md:w-3/5 lg:w-2/3 p-6 flex flex-col">
             <div class="flex-grow bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="p-4 border-b"><input type="text" id="search-bar" placeholder="Search inventory..." class="w-full p-2 rounded-md form-input"></div>
+                <div class="p-4 border-b">
+                    <input type="text" id="search-bar" placeholder="Search inventory..." class="w-full p-2 rounded-md form-input">
+                </div>
                 <div class="overflow-x-auto h-full">
-                    <table class="min-w-full"><thead class="sticky top-0"><tr class="table-header">
-                        <th class="p-3 text-left">Name</th><th class="p-3 text-left">CAS</th><th class="p-3 text-left">Percent Full (%)</th><th class="p-3 text-left">Location</th>
-                        <th class="p-3 text-left">Manufacturer</th><th class="p-3 text-left">Date Arrived</th><th class="p-3 text-left">Label (Y/N)</th>
-                    </tr></thead><tbody id="inventory-table-body"></tbody></table>
-                     <div id="loading-indicator" class="p-6 text-center text-gray-500">Loading inventory...</div>
+                    <table class="min-w-full">
+                        <thead class="sticky top-0">
+                            <tr class="table-header">
+                                <th class="p-3 text-left">Name</th>
+                                <th class="p-3 text-left">CAS</th>
+                                <th class="p-3 text-left">Percent Full (%)</th>
+                                <th class="p-3 text-left">Location</th>
+                                <th class="p-3 text-left">Manufacturer</th>
+                                <th class="p-3 text-left">Date Arrived</th>
+                                <th class="p-3 text-left">Label (Y/N)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body"></tbody>
+                    </table>
+                    <div id="loading-indicator" class="p-6 text-center text-gray-500">Loading inventory...</div>
                 </div>
             </div>
         </div>
@@ -87,22 +159,45 @@
             const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc"; // Find this in your Supabase project settings
 
             if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-                alert("Database configuration is missing. Please update SUPABASE_URL and SUPABASE_ANON_KEY in the HTML file.");
+                showMessage("Database configuration is missing. Please update SUPABASE_URL and SUPABASE_ANON_KEY in the HTML file.", 'error');
                 return;
             }
 
             let allChemicals = [];
+            let selectedChemicalId = null;
 
             const chemicalForm = document.getElementById('chemical-form');
             const tableBody = document.getElementById('inventory-table-body');
             const searchBar = document.getElementById('search-bar');
             const docIdInput = document.getElementById('id');
             const loadingIndicator = document.getElementById('loading-indicator');
+            const addBtn = document.getElementById('add-btn');
+            const updateBtn = document.getElementById('update-btn');
+            const deleteBtn = document.getElementById('delete-btn');
+            const clearBtn = document.getElementById('clear-btn');
 
             const headers = {
                 'apikey': SUPABASE_ANON_KEY,
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
                 'Content-Type': 'application/json'
+            };
+
+            // --- Utility Functions ---
+            const showMessage = (message, type = 'success') => {
+                // Remove existing messages
+                const existingMessages = document.querySelectorAll('.status-message');
+                existingMessages.forEach(msg => msg.remove());
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `status-message status-${type}`;
+                messageDiv.textContent = message;
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 4000);
             };
 
             // --- UI Rendering ---
@@ -112,47 +207,75 @@
                     tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-gray-500">No chemicals in inventory.</td></tr>`;
                     return;
                 }
-                chemicals.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                chemicals.forEach(chem => {
+                
+                // Sort by name
+                const sortedChemicals = [...chemicals].sort((a, b) => 
+                    (a.name || '').localeCompare(b.name || '')
+                );
+                
+                sortedChemicals.forEach(chem => {
                     const row = document.createElement('tr');
                     row.className = 'table-row border-b border-gray-200 cursor-pointer';
                     row.dataset.id = chem.id;
                     
+                    // Format date
                     const dateArrived = chem.date_arrived ? chem.date_arrived.split('T')[0] : '';
 
                     row.innerHTML = `
-                        <td class="p-3">${chem.name || ''}</td><td class="p-3">${chem.cas_number || ''}</td>
-                        <td class="p-3">${chem.percent_full || ''}</td><td class="p-3">${chem.location || ''}</td>
-                        <td class="p-3">${chem.manufacturer || ''}</td><td class="p-3">${dateArrived}</td>
+                        <td class="p-3">${chem.name || ''}</td>
+                        <td class="p-3">${chem.cas_number || ''}</td>
+                        <td class="p-3">${chem.percent_full || ''}</td>
+                        <td class="p-3">${chem.location || ''}</td>
+                        <td class="p-3">${chem.manufacturer || ''}</td>
+                        <td class="p-3">${dateArrived}</td>
                         <td class="p-3">${chem.label || ''}</td>
                     `;
-                    row.addEventListener('click', () => handleRowSelect(chem));
+                    
+                    // Add click event listener
+                    row.addEventListener('click', () => handleRowSelect(chem, row));
                     tableBody.appendChild(row);
                 });
             };
 
-            const handleRowSelect = (chemical) => {
+            const handleRowSelect = (chemical, rowElement) => {
+                // Clear previous selection
+                document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
+                
+                // Select current row
+                rowElement.classList.add('selected');
+                selectedChemicalId = chemical.id;
+                
+                // Populate form
                 clearForm(false);
                 for (const key in chemical) {
-                    if (chemicalForm.elements[key]) {
-                        const value = chemical[key] || '';
+                    const element = chemicalForm.elements[key];
+                    if (element) {
+                        let value = chemical[key] || '';
                         if (['date_arrived', 'date_opened', 'date_expired'].includes(key) && value) {
-                            chemicalForm.elements[key].value = value.split('T')[0];
-                        } else {
-                            chemicalForm.elements[key].value = value;
+                            value = value.split('T')[0];
                         }
+                        element.value = value;
                     }
                 }
-                document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
-                document.querySelector(`[data-id="${chemical.id}"]`).classList.add('selected');
+                
+                // Enable update/delete buttons
+                updateBtn.disabled = false;
+                deleteBtn.disabled = false;
+                updateBtn.classList.remove('opacity-50');
+                deleteBtn.classList.remove('opacity-50');
             };
 
             const clearForm = (deselect = true) => {
                 chemicalForm.reset();
                 docIdInput.value = '';
+                selectedChemicalId = null;
+                
                 if (deselect) {
-                    const selectedRow = document.querySelector('.table-row.selected');
-                    if (selectedRow) selectedRow.classList.remove('selected');
+                    document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
+                    updateBtn.disabled = true;
+                    deleteBtn.disabled = true;
+                    updateBtn.classList.add('opacity-50');
+                    deleteBtn.classList.add('opacity-50');
                 }
             };
             
@@ -160,18 +283,24 @@
             const fetchInventory = async () => {
                 loadingIndicator.style.display = 'block';
                 loadingIndicator.textContent = 'Loading inventory...';
+                
                 try {
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?select=*`, { headers });
+                    
                     if (!response.ok) {
-                        const errorData = await response.json();
+                        const errorData = await response.json().catch(() => ({}));
                         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
                     }
+                    
                     allChemicals = await response.json();
                     renderTable(allChemicals);
                     loadingIndicator.style.display = 'none';
+                    showMessage(`Loaded ${allChemicals.length} chemicals`, 'success');
+                    
                 } catch (error) {
                     console.error("Failed to fetch inventory:", error);
-                    loadingIndicator.textContent = `Error: Could not load inventory. Please check your Supabase settings (URL, Key, and Row Level Security). Details: ${error.message}`;
+                    loadingIndicator.textContent = `Error: Could not load inventory. Please check your Supabase settings. Details: ${error.message}`;
+                    showMessage('Failed to load inventory', 'error');
                 }
             };
 
@@ -179,78 +308,123 @@
                 const formData = new FormData(chemicalForm);
                 const data = Object.fromEntries(formData.entries());
                 delete data.id;
+                
+                // Validation
                 if (!data.name || !data.cas_number) {
-                    alert("Please provide a Name and CAS Number.");
+                    showMessage("Please provide a Name and CAS Number.", 'error');
                     return;
                 }
+                
                 try {
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals`, {
-                        method: 'POST', headers, body: JSON.stringify(data)
+                        method: 'POST',
+                        headers: {
+                            ...headers,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(data)
                     });
-                    if (!response.ok) throw new Error('Server responded with an error.');
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || 'Server responded with an error.');
+                    }
+                    
                     clearForm();
-                    fetchInventory();
+                    await fetchInventory();
+                    showMessage('Chemical added successfully!', 'success');
+                    
                 } catch (error) {
                     console.error("Failed to add chemical:", error);
-                    alert("Error: Could not add chemical.");
+                    showMessage(`Error: Could not add chemical. ${error.message}`, 'error');
                 }
             };
 
             const updateChemical = async () => {
-                const id = docIdInput.value;
-                if (!id) {
-                    alert("Please select a chemical from the table to update.");
+                if (!selectedChemicalId) {
+                    showMessage("Please select a chemical from the table to update.", 'error');
                     return;
                 }
+                
                 const formData = new FormData(chemicalForm);
                 const data = Object.fromEntries(formData.entries());
                 delete data.id;
+                
                 try {
-                    const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${id}`, {
-                        method: 'PATCH', headers, body: JSON.stringify(data)
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${selectedChemicalId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            ...headers,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(data)
                     });
-                    if (!response.ok) throw new Error('Server responded with an error.');
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || 'Server responded with an error.');
+                    }
+                    
                     clearForm();
-                    fetchInventory();
+                    await fetchInventory();
+                    showMessage('Chemical updated successfully!', 'success');
+                    
                 } catch (error) {
                     console.error("Failed to update chemical:", error);
-                    alert("Error: Could not update chemical.");
+                    showMessage(`Error: Could not update chemical. ${error.message}`, 'error');
                 }
             };
 
             const deleteChemical = async () => {
-                const id = docIdInput.value;
-                if (!id) {
-                    alert("Please select a chemical from the table to delete.");
+                if (!selectedChemicalId) {
+                    showMessage("Please select a chemical from the table to delete.", 'error');
                     return;
                 }
-                if (confirm("Are you sure you want to delete this chemical?")) {
-                    try {
-                        const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${id}`, {
-                            method: 'DELETE', headers
-                        });
-                        if (!response.ok) throw new Error('Server responded with an error.');
-                        clearForm();
-                        fetchInventory();
-                    } catch (error) {
-                        console.error("Failed to delete chemical:", error);
-                        alert("Error: Could not delete chemical.");
+                
+                if (!confirm("Are you sure you want to delete this chemical?")) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${selectedChemicalId}`, {
+                        method: 'DELETE',
+                        headers
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || 'Server responded with an error.');
                     }
+                    
+                    clearForm();
+                    await fetchInventory();
+                    showMessage('Chemical deleted successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error("Failed to delete chemical:", error);
+                    showMessage(`Error: Could not delete chemical. ${error.message}`, 'error');
                 }
             };
 
             // --- Event Listeners ---
-            document.getElementById('add-btn').addEventListener('click', addChemical);
-            document.getElementById('update-btn').addEventListener('click', updateChemical);
-            document.getElementById('delete-btn').addEventListener('click', deleteChemical);
-            document.getElementById('clear-btn').addEventListener('click', () => clearForm(true));
+            addBtn.addEventListener('click', addChemical);
+            updateBtn.addEventListener('click', updateChemical);
+            deleteBtn.addEventListener('click', deleteChemical);
+            clearBtn.addEventListener('click', () => clearForm(true));
 
             searchBar.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const filtered = allChemicals.filter(chem =>
-                    Object.values(chem).some(val => String(val).toLowerCase().includes(searchTerm))
+                    Object.values(chem).some(val => 
+                        val && String(val).toLowerCase().includes(searchTerm)
+                    )
                 );
                 renderTable(filtered);
+            });
+
+            // Prevent form submission on Enter
+            chemicalForm.addEventListener('submit', (e) => {
+                e.preventDefault();
             });
 
             // --- Initial Load ---
