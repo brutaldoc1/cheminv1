@@ -30,7 +30,7 @@
             <h2 class="text-2xl font-bold mb-6 text-gray-700 border-b pb-4">Chemical Details</h2>
             <form id="chemical-form" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                 
-                <div class="col-span-2"><label for="name" class="form-label">Name* (Primary Key)</label><input type="text" id="name" name="name" class="w-full p-2 rounded-md form-input" required></div>
+                <div class="col-span-2"><label for="name" class="form-label">Name*</label><input type="text" id="name" name="name" class="w-full p-2 rounded-md form-input" required></div>
                 <div><label for="cas_number" class="form-label">CAS Number*</label><input type="text" id="cas_number" name="cas_number" class="w-full p-2 rounded-md form-input" required></div>
                 <div><label for="location" class="form-label">Location</label><input type="text" id="location" name="location" class="w-full p-2 rounded-md form-input"></div>
                 <div><label for="manufacturer" class="form-label">Manufacturer</label><input type="text" id="manufacturer" name="manufacturer" class="w-full p-2 rounded-md form-input"></div>
@@ -54,7 +54,7 @@
                     </select>
                 </div>
                 <div class="col-span-2"><label for="comment" class="form-label">Comment</label><textarea id="comment" name="comment" rows="4" class="w-full p-2 rounded-md form-textarea"></textarea></div>
-                <input type="hidden" id="selected-name" name="selected-name">
+                <input type="hidden" id="id" name="id">
                 <div class="col-span-2 grid grid-cols-2 gap-4 pt-4">
                      <button type="button" id="add-btn" class="w-full p-3 rounded-md btn-primary font-semibold">Add Chemical</button>
                      <button type="button" id="update-btn" class="w-full p-3 rounded-md btn-primary font-semibold">Update Selected</button>
@@ -82,8 +82,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- IMPORTANT: PASTE YOUR SUPABASE DETAILS HERE ---
-            const SUPABASE_URL = "https://slyedoljsademnnovssw.supabase.co
-"; // Find this in your Supabase project settings
+            const SUPABASE_URL = "https://slyedoljsademnnovssw.supabase.co"; // Find this in your Supabase project settings
             const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc"; // Find this in your Supabase project settings
 
             if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -96,7 +95,7 @@
             const chemicalForm = document.getElementById('chemical-form');
             const tableBody = document.getElementById('inventory-table-body');
             const searchBar = document.getElementById('search-bar');
-            const selectedNameInput = document.getElementById('selected-name');
+            const docIdInput = document.getElementById('id');
             const loadingIndicator = document.getElementById('loading-indicator');
 
             const headers = {
@@ -116,7 +115,7 @@
                 chemicals.forEach(chem => {
                     const row = document.createElement('tr');
                     row.className = 'table-row border-b border-gray-200 cursor-pointer';
-                    row.dataset.name = chem.name;
+                    row.dataset.id = chem.id;
                     
                     const dateArrived = chem.date_arrived ? new Date(chem.date_arrived).toISOString().split('T')[0] : '';
 
@@ -144,14 +143,13 @@
                         }
                     }
                 }
-                selectedNameInput.value = chemical.name;
                 document.querySelectorAll('.table-row').forEach(r => r.classList.remove('selected'));
-                document.querySelector(`[data-name="${chemical.name}"]`).classList.add('selected');
+                document.querySelector(`[data-id="${chemical.id}"]`).classList.add('selected');
             };
 
             const clearForm = (deselect = true) => {
                 chemicalForm.reset();
-                selectedNameInput.value = '';
+                docIdInput.value = '';
                 if (deselect) {
                     const selectedRow = document.querySelector('.table-row.selected');
                     if (selectedRow) selectedRow.classList.remove('selected');
@@ -169,7 +167,6 @@
                 ['date_arrived', 'date_opened', 'date_expired'].forEach(key => {
                     if (data[key] === '') data[key] = null;
                 });
-                delete data['selected-name'];
                 return data;
             };
 
@@ -194,6 +191,7 @@
 
             const addChemical = async () => {
                 const data = getSanitizedFormData();
+                delete data.id;
                 if (!data.name || !data.cas_number) {
                     alert("Please provide a Name and CAS Number.");
                     return;
@@ -212,14 +210,15 @@
             };
 
             const updateChemical = async () => {
-                const name = selectedNameInput.value;
-                if (!name) {
+                const id = docIdInput.value;
+                if (!id) {
                     alert("Please select a chemical from the table to update.");
                     return;
                 }
                 const data = getSanitizedFormData();
+                delete data.id;
                 try {
-                    const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?name=eq.${name}`, {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${id}`, {
                         method: 'PATCH', headers, body: JSON.stringify(data)
                     });
                     if (!response.ok) throw new Error('Server responded with an error.');
@@ -232,14 +231,14 @@
             };
 
             const deleteChemical = async () => {
-                const name = selectedNameInput.value;
-                if (!name) {
+                const id = docIdInput.value;
+                if (!id) {
                     alert("Please select a chemical from the table to delete.");
                     return;
                 }
-                if (confirm(`Are you sure you want to delete "${name}"?`)) {
+                if (confirm("Are you sure you want to delete this chemical?")) {
                     try {
-                        const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?name=eq.${name}`, {
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/chemicals?id=eq.${id}`, {
                             method: 'DELETE', headers
                         });
                         if (!response.ok) throw new Error('Server responded with an error.');
