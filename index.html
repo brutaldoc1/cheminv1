@@ -384,8 +384,8 @@
                 chemicalForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const chemicalData = getFormData();
-                    if (!chemicalData.name || !chemicalData.cas_number) {
-                        alert('Please fill in at least the Name and CAS Number.');
+                    if (!chemicalData.name) {
+                        alert('Please fill in the Name field.');
                         return;
                     }
                     const { error } = await supabase.from(TABLE_NAME).insert([chemicalData]);
