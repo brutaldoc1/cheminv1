@@ -190,6 +190,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAS</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percent Full (%)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manufacturer</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Arrived</th>
@@ -199,7 +200,7 @@
                     <tbody id="inventory-table-body" class="bg-white divide-y divide-gray-200">
                         <!-- Initial loading state -->
                         <tr id="loading-row">
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                            <td colspan="9" class="px-6 py-4 text-center text-gray-500">
                                 Loading inventory...
                             </td>
                         </tr>
@@ -284,7 +285,7 @@
                 function renderTable(chemicals) {
                     inventoryTableBody.innerHTML = ''; // Clear table
                     if (chemicals.length === 0 && loadingRow.style.display === 'none') {
-                         inventoryTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-500">No chemicals found in table '${TABLE_NAME}'.</td></tr>`;
+                         inventoryTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-gray-500">No chemicals found in table '${TABLE_NAME}'.</td></tr>`;
                     } else {
                         chemicals.forEach((chemical, index) => {
                             const row = createTableRow(chemical, index + 1);
@@ -310,6 +311,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${chemical.name || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.cas_number || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.percent_full || ''}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.amount || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.location || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.manufacturer || ''}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.date_arrived ? chemical.date_arrived.split('T')[0] : ''}</td>
