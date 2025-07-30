@@ -88,11 +88,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="percent_full" class="block text-sm font-medium text-gray-700">Remaining amount (approximately)</label>
+                            <label for="percent_full" class="block text-sm font-medium text-gray-700">Percent Full (%)</label>
                             <input type="text" id="percent_full" name="percent_full" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         </div>
                          <div>
-                            <label for="amount" class="block text-sm font-medium text-gray-700">Capacity</label>
+                            <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
                             <input type="text" id="amount" name="amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         </div>
                     </div>
@@ -194,8 +194,8 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAS</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining amount (approximately)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percent Full (%)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manufacturer</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Arrived</th>
@@ -457,21 +457,24 @@
                         alert('Please fill in the Name field.');
                         return;
                     }
-                    const { error } = await supabase.from(TABLE_NAME).insert([chemicalData]);
+                    const { data, error } = await supabase.from(TABLE_NAME).insert([chemicalData]).select();
                     if (error) {
                         console.error('Error adding chemical:', error);
                         alert('Failed to add chemical. Check console for details.');
                     } else {
+                        // Add the new chemical to the local cache
+                        chemicalsCache.push(data[0]);
+                        // Re-sort the cache to maintain alphabetical order
+                        chemicalsCache.sort((a, b) => a.name.localeCompare(b.name));
                         clearFormAndSelection();
-                        fetchAndRenderChemicals(); // Refresh table
+                        // Trigger a re-render of the table with the current filter applied
+                        searchInput.dispatchEvent(new Event('input'));
                     }
                 });
 
                 updateBtn.addEventListener('click', async () => {
                     try {
-                        console.log('Update button clicked.');
                         const selectedRow = document.querySelector('.row-selected');
-                        
                         if (!selectedRow) {
                             alert('Please select a chemical from the table to update.');
                             return;
@@ -480,15 +483,20 @@
                         const chemicalNameToUpdate = selectedRow.dataset.name;
                         const chemicalData = getFormData();
                         
-                        console.log('Attempting to update chemical with name:', chemicalNameToUpdate);
                         const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('name', chemicalNameToUpdate).select();
                         
                         if (error) {
                             console.error('Error updating chemical:', error);
                             alert(`Failed to update chemical. Error: ${error.message}`);
                         } else {
+                            // Find and update the chemical in the local cache
+                            const index = chemicalsCache.findIndex(c => c.name === chemicalNameToUpdate);
+                            if (index !== -1) {
+                                chemicalsCache[index] = data[0];
+                            }
                             clearFormAndSelection();
-                            fetchAndRenderChemicals(); // Refresh table
+                            // Trigger a re-render of the table with the current filter applied
+                            searchInput.dispatchEvent(new Event('input'));
                         }
                     } catch (e) {
                          console.error('A critical error occurred in updateBtn handler:', e);
@@ -498,9 +506,7 @@
 
                 deleteBtn.addEventListener('click', async () => {
                     try {
-                        console.log('Delete button clicked.');
                         const selectedRow = document.querySelector('.row-selected');
-
                         if (!selectedRow) {
                             alert('Please select a chemical from the table to delete.');
                             return;
@@ -509,18 +515,18 @@
                         const chemicalNameToDelete = selectedRow.dataset.name;
                         
                         if (confirm('Are you sure you want to delete this chemical?')) {
-                            console.log('Attempting to delete chemical with name:', chemicalNameToDelete);
                             const { error } = await supabase.from(TABLE_NAME).delete().eq('name', chemicalNameToDelete);
                             
                             if (error) {
                                 console.error('Error deleting chemical:', error);
                                 alert(`Failed to delete chemical. Error: ${error.message}`);
                             } else {
+                                // Find and remove the chemical from the local cache
+                                chemicalsCache = chemicalsCache.filter(c => c.name !== chemicalNameToDelete);
                                 clearFormAndSelection();
-                                fetchAndRenderChemicals(); // Refresh table
+                                // Trigger a re-render of the table with the current filter applied
+                                searchInput.dispatchEvent(new Event('input'));
                             }
-                        } else {
-                            console.log('User cancelled deletion.');
                         }
                     } catch (e) {
                         console.error('A critical error occurred in deleteBtn handler:', e);
