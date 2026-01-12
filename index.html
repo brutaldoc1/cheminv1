@@ -228,7 +228,7 @@
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc';
             
             // --- CHANGE PASSWORD HERE ---
-            const LAB_PASSWORD = "greenmaterial111"; 
+            const LAB_PASSWORD = "lab-access-123"; 
 
             const TABLE_NAME = 'chemicals';
 
@@ -237,9 +237,6 @@
             const loginForm = document.getElementById('login-form');
             const loginMessage = document.getElementById('login-message');
             const logoutBtn = document.getElementById('logout-btn');
-
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase client initialized');
 
             const chemicalForm = document.getElementById('chemical-form');
             const docIdInput = document.getElementById('id');
@@ -282,6 +279,16 @@
             function showApp() {
                 loginOverlay.classList.add('hidden');
                 appContainer.classList.remove('hidden');
+                
+                // Initialize Supabase ONLY after we determine the user is "logged in"
+                // (Though in this architecture, the key is public anyway)
+                if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+                     const loadingIndicator = document.getElementById('loading-row').querySelector('td');
+                     if(loadingIndicator) loadingIndicator.textContent = "Configuration Error: Please paste your SUPABASE_URL and SUPABASE_ANON_KEY in the HTML file.";
+                     return;
+                }
+                
+                // Now verify connection by trying to fetch
                 fetchAndRenderChemicals();
             }
 
@@ -301,6 +308,10 @@
             }
 
             // --- Database Functions ---
+            // Note: We need to define supabase client here or globally
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase client initialized');
+
             async function fetchAndRenderChemicals() {
                 loadingRow.style.display = 'table-row';
                 inventoryTableBody.innerHTML = '';
