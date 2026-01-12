@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chemical Inventory Management</title>
+    <title>GMEL Lab Inventory</title>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tailwind CSS -->
@@ -33,17 +33,27 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        
+        /* Toast Notification Style */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 50; }
+        .toast { background: #333; color: white; padding: 12px 24px; border-radius: 4px; margin-bottom: 10px; opacity: 0; transition: opacity 0.3s ease-in-out; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .toast.show { opacity: 1; }
+        .toast.error { background: #ef4444; }
+        .toast.success { background: #10b981; }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <!-- LOGIN SCREEN (Added) -->
+    <div id="toast-container"></div>
+
+    <!-- LOGIN SCREEN (Simple Password Only) -->
     <div id="login-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
             <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center">GMEL Lab Inventory</h1>
             <p class="text-center text-gray-500 mb-6">Please enter the lab access password.</p>
             
             <form id="login-form" class="space-y-4">
+                <!-- Removed Email Input -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Access Password</label>
                     <input type="password" id="login-password" placeholder="Enter password..." class="mt-1 block w-full rounded-md border border-gray-300 p-3 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
@@ -56,143 +66,126 @@
         </div>
     </div>
 
-    <!-- MAIN APP CONTAINER (Initially Hidden) -->
-    <div id="app-container" class="flex h-screen bg-gray-100 hidden">
+    <!-- MAIN APP CONTAINER (Hidden by default) -->
+    <div id="app-container" class="flex flex-col md:flex-row h-screen hidden">
         <!-- Left Panel: Chemical Details Form -->
-        <div class="w-full md:w-1/3 lg:w-1/4 xl:w-1/4 h-full bg-white shadow-lg overflow-y-auto flex flex-col">
-            <div class="p-6 pb-2">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-800">Chemical Details</h2>
-                    <!-- Logout Button (Added) -->
-                    <button id="logout-btn" class="text-xs text-red-600 hover:text-red-800 font-medium border border-red-200 px-3 py-1 rounded transition-colors duration-200">Logout</button>
+        <div class="w-full md:w-2/5 lg:w-1/3 bg-white p-6 shadow-lg overflow-y-auto flex flex-col">
+            <div class="flex justify-between items-center border-b pb-4 mb-6">
+                <h2 class="text-2xl font-bold text-gray-700">Chemical Details</h2>
+                <button id="logout-btn" class="text-xs text-red-600 hover:text-red-800 font-medium border border-red-200 px-3 py-1 rounded transition-colors duration-200">Logout</button>
+            </div>
+               
+            <form id="chemical-form" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                <!-- Form fields -->
+                <div class="col-span-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name*</label>
+                    <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required>
+                </div>
+
+                <div>
+                    <label for="cas_number" class="block text-sm font-medium text-gray-700">CAS Number*</label>
+                    <input type="text" id="cas_number" name="cas_number" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required>
+                </div>
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                    <input type="text" id="location" name="location" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="manufacturer" class="block text-sm font-medium text-gray-700">Manufacturer</label>
+                    <input type="text" id="manufacturer" name="manufacturer" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="text" id="quantity" name="quantity" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="percent_full" class="block text-sm font-medium text-gray-700">Percent Full (%)</label>
+                    <input type="text" id="percent_full" name="percent_full" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                    <input type="text" id="amount" name="amount" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                 </div>
                 
-                <form id="chemical-form" class="space-y-4">
-                    <!-- Form fields -->
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                        <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                    </div>
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700">Price (KRW)</label>
+                    <input type="text" id="price" name="price" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="to_order" class="block text-sm font-medium text-gray-700">To Order?</label>
+                    <input type="text" id="to_order" name="to_order" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div class="col-span-2">
+                    <label for="molecular_weight" class="block text-sm font-medium text-gray-700">Molecular Weight</label>
+                    <input type="text" id="molecular_weight" name="molecular_weight" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div class="col-span-2">
+                    <label for="msds_url" class="block text-sm font-medium text-gray-700">MSDS URL</label>
+                    <input type="url" id="msds_url" name="msds_url" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="cas_number" class="block text-sm font-medium text-gray-700">CAS Number</label>
-                            <input type="text" id="cas_number" name="cas_number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
-                            <input type="text" id="location" name="location" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                    </div>
+                <div>
+                    <label for="date_arrived" class="block text-sm font-medium text-gray-700">Date Arrived</label>
+                    <input type="date" id="date_arrived" name="date_arrived" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="date_opened" class="block text-sm font-medium text-gray-700">Date Opened</label>
+                    <input type="date" id="date_opened" name="date_opened" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
 
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="manufacturer" class="block text-sm font-medium text-gray-700">Manufacturer</label>
-                            <input type="text" id="manufacturer" name="manufacturer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
-                            <input type="text" id="quantity" name="quantity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                    </div>
+                <div>
+                    <label for="date_expired" class="block text-sm font-medium text-gray-700">Date Expired</label>
+                    <input type="date" id="date_expired" name="date_expired" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="barcode" class="block text-sm font-medium text-gray-700">Barcode</label>
+                    <input type="text" id="barcode" name="barcode" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="percent_full" class="block text-sm font-medium text-gray-700">Percent Full (%)</label>
-                            <input type="text" id="percent_full" name="percent_full" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                         <div>
-                            <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
-                            <input type="text" id="amount" name="amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="price" class="block text-sm font-medium text-gray-700">Price (KRW)</label>
-                            <input type="text" id="price" name="price" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                         <div>
-                            <label for="to_order" class="block text-sm font-medium text-gray-700">To Order?</label>
-                            <input type="text" id="to_order" name="to_order" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div>
-                            <label for="molecular_weight" class="block text-sm font-medium text-gray-700">Molecular Weight</label>
-                            <input type="text" id="molecular_weight" name="molecular_weight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="msds_url" class="block text-sm font-medium text-gray-700">MSDS URL</label>
-                            <input type="text" id="msds_url" name="msds_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                    </div>
+                <div>
+                    <label for="label" class="block text-sm font-medium text-gray-700">Label (Y/N)</label>
+                    <select id="label" name="label" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value=""></option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="date_arrived" class="block text-sm font-medium text-gray-700">Date Arrived</label>
-                            <input type="date" id="date_arrived" name="date_arrived" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="date_opened" class="block text-sm font-medium text-gray-700">Date Opened</label>
-                            <input type="date" id="date_opened" name="date_opened" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                    </div>
+                <div class="col-span-2">
+                    <label for="comment" class="block text-sm font-medium text-gray-700">Comment</label>
+                    <textarea id="comment" name="comment" rows="3" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
+                </div>
+                
+                <input type="hidden" id="id" name="id">
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="date_expired" class="block text-sm font-medium text-gray-700">Date Expired</label>
-                            <input type="date" id="date_expired" name="date_expired" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="barcode" class="block text-sm font-medium text-gray-700">Barcode</label>
-                            <input type="text" id="barcode" name="barcode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                        </div>
+                <!-- Action Buttons -->
+                <div class="pt-4 space-y-2 pb-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <button type="submit" id="add-chemical-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Add Chemical
+                        </button>
+                        <button type="button" id="update-selected-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" disabled>
+                            Update Selected
+                        </button>
                     </div>
-
-                    <div>
-                        <label for="label" class="block text-sm font-medium text-gray-700">Label (Y/N)</label>
-                        <select id="label" name="label" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            <option value=""></option>
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="comment" class="block text-sm font-medium text-gray-700">Comment</label>
-                        <textarea id="comment" name="comment" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
-                    </div>
-                    
-                    <input type="hidden" id="id" name="id">
-
-                    <!-- Action Buttons -->
-                    <div class="pt-4 space-y-2 pb-6">
-                        <div class="grid grid-cols-2 gap-4">
-                            <button type="submit" id="add-chemical-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Add Chemical
-                            </button>
-                            <button type="button" id="update-selected-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" disabled>
-                                Update Selected
-                            </button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
                             <button type="button" id="delete-selected-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" disabled>
-                                Delete Selected
-                            </button>
-                            <button type="button" id="clear-form-btn" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Clear Form
-                            </button>
-                        </div>
-                        <div class="pt-2">
-                            <button type="button" id="export-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                Export to Excel
-                            </button>
-                        </div>
+                            Delete Selected
+                        </button>
+                        <button type="button" id="clear-form-btn" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Clear Form
+                        </button>
                     </div>
-                </form>
-            </div>
+                        <div class="pt-2">
+                        <button type="button" id="export-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Export to Excel
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <!-- Right Panel: Inventory Table -->
@@ -234,6 +227,7 @@
             try {
                 // --- Supabase Configuration ---
                 // PASTE YOUR SUPABASE URL AND ANON KEY BELOW
+                // Make sure to paste them between the backticks (`)
                 const SUPABASE_URL = `https://slyedoljsademnnovssw.supabase.co`;
                 const SUPABASE_ANON_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc`;
                 
@@ -366,8 +360,8 @@
                 function createTableRow(chemical, index) {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-gray-50 cursor-pointer';
-                    // Using 'name' as the unique identifier since it is the primary key in your logic.
-                    row.dataset.name = chemical.name; 
+                    // Using ID to identify
+                    row.dataset.id = chemical.id; 
 
                     row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index}</td>
@@ -397,6 +391,10 @@
 
                     rowElement.classList.add('row-selected');
                     populateForm(chemical);
+                    
+                    // Set the hidden ID correctly!
+                    docIdInput.value = chemical.id;
+                    
                     updateBtn.disabled = false;
                     deleteBtn.disabled = false;
                 }
@@ -435,6 +433,7 @@
                 
                 function clearFormAndSelection() {
                     chemicalForm.reset();
+                    docIdInput.value = '';
                     document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
                     updateBtn.disabled = true;
                     deleteBtn.disabled = true;
@@ -523,6 +522,9 @@
                 chemicalForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const chemicalData = getFormData();
+                    
+                    delete chemicalData.id; // Correctly delete ID before insert
+
                     if (!chemicalData.name) {
                         alert('Please fill in the Name field.');
                         return;
@@ -530,7 +532,7 @@
                     const { data, error } = await supabase.from(TABLE_NAME).insert([chemicalData]).select();
                     if (error) {
                         console.error('Error adding chemical:', error);
-                        alert('Failed to add chemical. Check console for details.');
+                        showToast('Failed to add chemical. Check console for details.', 'error');
                     } else {
                         // Add the new chemical to the local cache
                         chemicalsCache.push(data[0]);
@@ -539,35 +541,37 @@
                         clearFormAndSelection();
                         // Trigger a re-render of the table with the current filter applied
                         searchInput.dispatchEvent(new Event('input'));
+                        showToast('Chemical added successfully!', 'success');
                     }
                 });
 
                 updateBtn.addEventListener('click', async () => {
                     try {
-                        const selectedRow = document.querySelector('.row-selected');
-                        if (!selectedRow) {
+                        const id = docIdInput.value;
+                        if (!id) {
                             alert('Please select a chemical from the table to update.');
                             return;
                         }
                         
-                        const chemicalNameToUpdate = selectedRow.dataset.name;
                         const chemicalData = getFormData();
+                        delete chemicalData.id; // Do not update the ID itself
                         
-                        // Using 'name' to identify the record to update
-                        const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('name', chemicalNameToUpdate).select();
+                        // Using 'id' to identify the record to update
+                        const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', id).select();
                         
                         if (error) {
                             console.error('Error updating chemical:', error);
-                            alert(`Failed to update chemical. Error: ${error.message}`);
+                            showToast(`Failed to update chemical. Error: ${error.message}`, 'error');
                         } else {
                             // Find and update the chemical in the local cache
-                            const index = chemicalsCache.findIndex(c => c.name === chemicalNameToUpdate);
+                            const index = chemicalsCache.findIndex(c => c.id == id);
                             if (index !== -1) {
                                 chemicalsCache[index] = data[0];
                             }
                             clearFormAndSelection();
                             // Trigger a re-render of the table with the current filter applied
                             searchInput.dispatchEvent(new Event('input'));
+                            showToast('Chemical updated successfully!', 'success');
                         }
                     } catch (e) {
                          console.error('A critical error occurred in updateBtn handler:', e);
@@ -577,26 +581,25 @@
 
                 deleteBtn.addEventListener('click', async () => {
                     try {
-                        const selectedRow = document.querySelector('.row-selected');
-                        if (!selectedRow) {
+                        const id = docIdInput.value;
+                        if (!id) {
                             alert('Please select a chemical from the table to delete.');
                             return;
                         }
                         
-                        const chemicalNameToDelete = selectedRow.dataset.name;
-                        
                         if (confirm('Are you sure you want to delete this chemical?')) {
-                            const { error } = await supabase.from(TABLE_NAME).delete().eq('name', chemicalNameToDelete);
+                            const { error } = await supabase.from(TABLE_NAME).delete().eq('id', id);
                             
                             if (error) {
                                 console.error('Error deleting chemical:', error);
-                                alert(`Failed to delete chemical. Error: ${error.message}`);
+                                showToast(`Failed to delete chemical. Error: ${error.message}`, 'error');
                             } else {
                                 // Find and remove the chemical from the local cache
-                                chemicalsCache = chemicalsCache.filter(c => c.name !== chemicalNameToDelete);
+                                chemicalsCache = chemicalsCache.filter(c => c.id != id);
                                 clearFormAndSelection();
                                 // Trigger a re-render of the table with the current filter applied
                                 searchInput.dispatchEvent(new Event('input'));
+                                showToast('Chemical deleted successfully!', 'success');
                             }
                         }
                     } catch (e) {
