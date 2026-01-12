@@ -4,23 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GMEL Lab Inventory</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .form-label { font-weight: 500; color: #4A5568; }
-        .form-input, .form-textarea, .form-select { background-color: #F7FAFC; border: 1px solid #E2E8F0; transition: all 0.2s; }
-        .form-input:focus, .form-textarea:focus, .form-select:focus { background-color: white; border-color: #4299E1; box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); outline: none; }
-        .table-header { background-color: #EDF2F7; color: #2D3748; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-        .table-row:hover { background-color: #F7FAFC; }
-        .table-row.selected { background-color: #3182CE; color: white; }
-        .btn-primary { background-color: #3182CE; color: white; }
-        .btn-primary:hover { background-color: #2B6CB0; }
-        .btn-danger { background-color: #E53E3E; color: white; }
-        .btn-danger:hover { background-color: #C53030; }
-        .btn-secondary { background-color: #718096; color: white; }
-        .btn-secondary:hover { background-color: #4A5568; }
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.075rem;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .form-input-active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        .row-selected {
+            background-color: #dbeafe;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         /* Toast Notification Style */
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 50; }
@@ -30,22 +42,23 @@
         .toast.success { background: #10b981; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100">
 
     <div id="toast-container"></div>
 
-    <!-- LOGIN SCREEN (Password Only) -->
+    <!-- LOGIN SCREEN (Simple Password Only) -->
     <div id="login-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
-            <h1 id="login-title" class="text-2xl font-bold text-gray-800 mb-2 text-center">GMEL Lab Inventory</h1>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2 text-center">GMEL Lab Inventory</h1>
             <p class="text-center text-gray-500 mb-6">Please enter the lab access password.</p>
             
             <form id="login-form" class="space-y-4">
+                <!-- Removed Email Input -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Access Password</label>
                     <input type="password" id="login-password" placeholder="Enter password..." class="mt-1 block w-full rounded-md border border-gray-300 p-3 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
                 </div>
-                <button type="submit" id="login-submit-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition-colors duration-200">
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
                     Enter Lab
                 </button>
             </form>
@@ -55,77 +68,169 @@
 
     <!-- MAIN APP CONTAINER (Hidden by default) -->
     <div id="app-container" class="flex flex-col md:flex-row h-screen hidden">
-        <!-- Left Panel: Form -->
+        <!-- Left Panel: Chemical Details Form -->
         <div class="w-full md:w-2/5 lg:w-1/3 bg-white p-6 shadow-lg overflow-y-auto flex flex-col">
             <div class="flex justify-between items-center border-b pb-4 mb-6">
                 <h2 class="text-2xl font-bold text-gray-700">Chemical Details</h2>
                 <button id="logout-btn" class="text-xs text-red-600 hover:text-red-800 font-medium border border-red-200 px-3 py-1 rounded transition-colors duration-200">Logout</button>
             </div>
-            
+               
             <form id="chemical-form" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-                
-                <div class="col-span-2"><label for="name" class="form-label">Name*</label><input type="text" id="name" name="name" class="w-full p-2 rounded-md form-input" required></div>
-                <div><label for="cas_number" class="form-label">CAS Number*</label><input type="text" id="cas_number" name="cas_number" class="w-full p-2 rounded-md form-input" required></div>
-                <div><label for="location" class="form-label">Location</label><input type="text" id="location" name="location" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="manufacturer" class="form-label">Manufacturer</label><input type="text" id="manufacturer" name="manufacturer" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="quantity" class="form-label">Quantity</label><input type="text" id="quantity" name="quantity" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="percent_full" class="form-label">Percent Full (%)</label><input type="text" id="percent_full" name="percent_full" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="amount" class="form-label">Amount</label><input type="text" id="amount" name="amount" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="price" class="form-label">Price (KRW)</label><input type="text" id="price" name="price" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="to_order" class="form-label">To Order?</label><input type="text" id="to_order" name="to_order" class="w-full p-2 rounded-md form-input"></div>
-                <div class="col-span-2"><label for="molecular_weight" class="form-label">Molecular Weight</label><input type="text" id="molecular_weight" name="molecular_weight" class="w-full p-2 rounded-md form-input"></div>
-                <div class="col-span-2"><label for="msds_url" class="form-label">MSDS URL</label><input type="url" id="msds_url" name="msds_url" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="date_arrived" class="form-label">Date Arrived</label><input type="date" id="date_arrived" name="date_arrived" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="date_opened" class="form-label">Date Opened</label><input type="date" id="date_opened" name="date_opened" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="date_expired" class="form-label">Date Expired</label><input type="date" id="date_expired" name="date_expired" class="w-full p-2 rounded-md form-input"></div>
-                <div><label for="barcode" class="form-label">Barcode</label><input type="text" id="barcode" name="barcode" class="w-full p-2 rounded-md form-input"></div>
+                <!-- Form fields -->
+                <div class="col-span-2">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name*</label>
+                    <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required>
+                </div>
+
                 <div>
-                    <label for="label" class="form-label">Label (Yes/No)</label>
-                    <select id="label" name="label" class="w-full p-2 rounded-md form-select">
+                    <label for="cas_number" class="block text-sm font-medium text-gray-700">CAS Number*</label>
+                    <input type="text" id="cas_number" name="cas_number" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" required>
+                </div>
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                    <input type="text" id="location" name="location" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="manufacturer" class="block text-sm font-medium text-gray-700">Manufacturer</label>
+                    <input type="text" id="manufacturer" name="manufacturer" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="text" id="quantity" name="quantity" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="percent_full" class="block text-sm font-medium text-gray-700">Percent Full (%)</label>
+                    <input type="text" id="percent_full" name="percent_full" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                    <input type="text" id="amount" name="amount" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700">Price (KRW)</label>
+                    <input type="text" id="price" name="price" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="to_order" class="block text-sm font-medium text-gray-700">To Order?</label>
+                    <input type="text" id="to_order" name="to_order" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                
+                <div class="col-span-2">
+                    <label for="molecular_weight" class="block text-sm font-medium text-gray-700">Molecular Weight</label>
+                    <input type="text" id="molecular_weight" name="molecular_weight" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div class="col-span-2">
+                    <label for="msds_url" class="block text-sm font-medium text-gray-700">MSDS URL</label>
+                    <input type="url" id="msds_url" name="msds_url" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="date_arrived" class="block text-sm font-medium text-gray-700">Date Arrived</label>
+                    <input type="date" id="date_arrived" name="date_arrived" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="date_opened" class="block text-sm font-medium text-gray-700">Date Opened</label>
+                    <input type="date" id="date_opened" name="date_opened" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="date_expired" class="block text-sm font-medium text-gray-700">Date Expired</label>
+                    <input type="date" id="date_expired" name="date_expired" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="barcode" class="block text-sm font-medium text-gray-700">Barcode</label>
+                    <input type="text" id="barcode" name="barcode" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="label" class="block text-sm font-medium text-gray-700">Label (Y/N)</label>
+                    <select id="label" name="label" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         <option value=""></option>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </select>
                 </div>
-                <div class="col-span-2"><label for="comment" class="form-label">Comment</label><textarea id="comment" name="comment" rows="4" class="w-full p-2 rounded-md form-textarea"></textarea></div>
+
+                <div class="col-span-2">
+                    <label for="comment" class="block text-sm font-medium text-gray-700">Comment</label>
+                    <textarea id="comment" name="comment" rows="3" class="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
+                </div>
+                
                 <input type="hidden" id="id" name="id">
-                <div class="col-span-2 grid grid-cols-2 gap-4 pt-4">
-                     <button type="button" id="add-btn" class="w-full p-3 rounded-md btn-primary font-semibold">Add Chemical</button>
-                     <button type="button" id="update-btn" class="w-full p-3 rounded-md btn-primary font-semibold" disabled>Update Selected</button>
-                     <button type="button" id="delete-btn" class="w-full p-3 rounded-md btn-danger font-semibold" disabled>Delete Selected</button>
-                     <button type="button" id="clear-btn" class="w-full p-3 rounded-md btn-secondary font-semibold">Clear Form</button>
+
+                <!-- Action Buttons -->
+                <div class="pt-4 space-y-2 col-span-2">
+                    <div class="grid grid-cols-2 gap-4">
+                        <button type="submit" id="add-chemical-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Add Chemical
+                        </button>
+                        <button type="button" id="update-selected-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" disabled>
+                            Update Selected
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                            <button type="button" id="delete-selected-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" disabled>
+                            Delete Selected
+                        </button>
+                        <button type="button" id="clear-form-btn" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Clear Form
+                        </button>
+                    </div>
+                        <div class="pt-2">
+                        <button type="button" id="export-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Export to Excel
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
 
-        <!-- Right Panel: Table -->
-        <div class="w-full md:w-3/5 lg:w-2/3 p-6 flex flex-col">
-            <div class="flex-grow bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="p-4 border-b"><input type="text" id="search-bar" placeholder="Search inventory..." class="w-full p-2 rounded-md form-input"></div>
-                <div class="overflow-x-auto h-full">
-                    <table class="min-w-full"><thead class="sticky top-0"><tr class="table-header">
-                        <th class="p-3 text-left">Name</th><th class="p-3 text-left">CAS</th><th class="p-3 text-left">Percent Full (%)</th><th class="p-3 text-left">Location</th>
-                        <th class="p-3 text-left">Manufacturer</th><th class="p-3 text-left">Date Arrived</th><th class="p-3 text-left">Label (Y/N)</th>
-                    </tr></thead><tbody id="inventory-table-body"></tbody></table>
-                     <div id="loading-indicator" class="p-6 text-center text-gray-500">Loading inventory...</div>
-                </div>
+        <!-- Right Panel: Inventory Table -->
+        <div class="w-full md:w-2/3 lg:w-3/4 xl:w-3/4 p-6 flex flex-col">
+            <div class="mb-4">
+                <input type="text" id="search-input" placeholder="Search inventory by name, CAS, or location..." class="w-full p-2 rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="flex-grow bg-white p-4 rounded-lg shadow-sm overflow-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No.</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CAS</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percent Full (%)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manufacturer</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Arrived</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Label (Y/N)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body" class="bg-white divide-y divide-gray-200">
+                        <tr id="loading-row">
+                            <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                                Loading inventory...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // --- CONFIGURATION START ---
+            // --- Supabase Configuration ---
+            // Using the credentials provided in your code
+            const SUPABASE_URL = 'https://slyedoljsademnnovssw.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc';
             
-            // 1. Paste your Supabase Keys here
-            const SUPABASE_URL = "https://slyedoljsademnnovssw.supabase.co"; 
-            const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNseWVkb2xqc2FkZW1ubm92c3N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNjEzMTAsImV4cCI6MjA2ODYzNzMxMH0.LJweV_TNk02RfN1SoctRTAaIWfpr37r3cFo8dGdPGsc"; 
-            
-            // 2. Set your desired shared password here
+            // --- CHANGE PASSWORD HERE ---
             const LAB_PASSWORD = "greenmaterial111"; 
 
             const TABLE_NAME = 'chemicals';
-            // --- CONFIGURATION END ---
 
             const loginOverlay = document.getElementById('login-overlay');
             const appContainer = document.getElementById('app-container');
@@ -133,29 +238,28 @@
             const loginMessage = document.getElementById('login-message');
             const logoutBtn = document.getElementById('logout-btn');
 
-            const chemicalForm = document.getElementById('chemical-form');
-            const tableBody = document.getElementById('inventory-table-body');
-            const searchBar = document.getElementById('search-bar');
-            const docIdInput = document.getElementById('id');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const updateBtn = document.getElementById('update-btn');
-            const deleteBtn = document.getElementById('delete-btn');
-
-            if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-                loadingIndicator.textContent = "Configuration Error: Please paste your SUPABASE_URL and SUPABASE_ANON_KEY in the HTML file.";
-            }
-
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            let allChemicals = [];
+            console.log('Supabase client initialized');
 
-            // --- Authentication Logic (Simple Password) ---
-            
-            // Check if already logged in (using simple local storage)
+            const chemicalForm = document.getElementById('chemical-form');
+            const docIdInput = document.getElementById('id');
+            const updateBtn = document.getElementById('update-selected-btn');
+            const deleteBtn = document.getElementById('delete-selected-btn');
+            const clearFormBtn = document.getElementById('clear-form-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const inventoryTableBody = document.getElementById('inventory-table-body');
+            const loadingRow = document.getElementById('loading-row');
+            const searchInput = document.getElementById('search-input');
+
+            let chemicalsCache = [];
+
+            // --- Authentication Logic ---
+            // Check localStorage
             if (localStorage.getItem('gmel_lab_auth') === 'true') {
                 showApp();
             }
 
-            // Login Handler
+            // Simple Password Login
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const password = document.getElementById('login-password').value;
@@ -170,19 +274,18 @@
                 }
             });
 
-            // Logout Handler
             logoutBtn.addEventListener('click', () => {
                 localStorage.removeItem('gmel_lab_auth');
-                location.reload(); 
+                location.reload();
             });
 
             function showApp() {
                 loginOverlay.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                fetchInventory(); // Load data only after login
+                fetchAndRenderChemicals();
             }
 
-            // --- UI Rendering ---
+            // --- UI Helper Functions ---
             function showToast(message, type = 'success') {
                 const toastContainer = document.getElementById('toast-container');
                 const toast = document.createElement('div');
@@ -197,170 +300,206 @@
                 }, 3000);
             }
 
-            const renderTable = (chemicals) => {
-                tableBody.innerHTML = '';
-                if (chemicals.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-gray-500">No chemicals in inventory.</td></tr>`;
+            // --- Database Functions ---
+            async function fetchAndRenderChemicals() {
+                loadingRow.style.display = 'table-row';
+                inventoryTableBody.innerHTML = '';
+                inventoryTableBody.appendChild(loadingRow);
+
+                const { data, error } = await supabase
+                    .from(TABLE_NAME)
+                    .select('*')
+                    .order('name', { ascending: true });
+
+                loadingRow.style.display = 'none';
+
+                if (error) {
+                    console.error('Error fetching chemicals:', error);
+                    showToast(`Could not fetch data: ${error.message}`, 'error');
                     return;
                 }
-                chemicals.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                chemicals.forEach(chem => {
-                    const row = document.createElement('tr');
-                    row.className = 'table-row border-b border-gray-200 cursor-pointer';
-                    row.dataset.id = chem.id;
-                    
-                    const dateArrived = chem.date_arrived ? new Date(chem.date_arrived).toISOString().split('T')[0] : '';
 
-                    row.innerHTML = `
-                        <td class="p-3">${chem.name || ''}</td><td class="p-3">${chem.cas_number || ''}</td>
-                        <td class="p-3">${chem.percent_full || ''}</td><td class="p-3">${chem.location || ''}</td>
-                        <td class="p-3">${chem.manufacturer || ''}</td><td class="p-3">${dateArrived}</td>
-                        <td class="p-3">${chem.label === true ? 'Y' : chem.label === false ? 'N' : ''}</td>
-                    `;
-                    row.addEventListener('click', () => handleRowSelect(chem));
-                    tableBody.appendChild(row);
-                });
-            };
+                chemicalsCache = data || [];
+                renderTable(chemicalsCache);
+            }
 
-            const handleRowSelect = (chemical) => {
-                const currentlySelected = document.querySelector('.table-row.selected');
-                if (currentlySelected) currentlySelected.classList.remove('selected');
-
-                chemicalForm.reset();
-                for (const key in chemical) {
-                    if (chemicalForm.elements[key]) {
-                        if (key === 'label') {
-                            chemicalForm.elements[key].value = chemical[key] === true ? 'true' : chemical[key] === false ? 'false' : '';
-                        } else if (['date_arrived', 'date_opened', 'date_expired'].includes(key) && chemical[key]) {
-                            chemicalForm.elements[key].value = new Date(chemical[key]).toISOString().split('T')[0];
-                        } else {
-                            chemicalForm.elements[key].value = chemical[key] || '';
-                        }
-                    }
+            function renderTable(chemicals) {
+                inventoryTableBody.innerHTML = '';
+                if (chemicals.length === 0) {
+                     inventoryTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-gray-500">No chemicals found.</td></tr>`;
+                } else {
+                    chemicals.forEach((chemical, index) => {
+                        const row = createTableRow(chemical, index + 1);
+                        inventoryTableBody.appendChild(row);
+                    });
                 }
+            }
+
+            function createTableRow(chemical, index) {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 cursor-pointer border-b border-gray-200';
+                row.dataset.id = chemical.id; 
+
+                const dateArrived = chemical.date_arrived ? chemical.date_arrived.split('T')[0] : '';
+                const labelText = chemical.label === true ? 'Yes' : (chemical.label === false ? 'No' : '');
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${chemical.name || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.cas_number || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.percent_full || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.amount || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.location || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${chemical.manufacturer || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateArrived}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${labelText}</td>
+                `;
+
+                row.addEventListener('click', () => handleRowSelect(chemical, row));
+                return row;
+            }
+
+            function handleRowSelect(chemical, rowElement) {
+                document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
+                rowElement.classList.add('row-selected');
                 
                 docIdInput.value = chemical.id;
+                populateForm(chemical);
                 updateBtn.disabled = false;
                 deleteBtn.disabled = false;
+            }
 
-                const newSelectedRow = document.querySelector(`[data-id="${chemical.id}"]`);
-                if (newSelectedRow) newSelectedRow.classList.add('selected');
-            };
+            function populateForm(chemical) {
+                const formatDate = (dateString) => dateString ? dateString.split('T')[0] : '';
+                
+                const fields = ['name', 'cas_number', 'location', 'manufacturer', 'quantity', 
+                                'percent_full', 'amount', 'price', 'to_order', 'molecular_weight', 
+                                'msds_url', 'barcode', 'comment'];
+                
+                fields.forEach(field => {
+                    if (chemicalForm.elements[field]) chemicalForm.elements[field].value = chemical[field] || '';
+                });
 
-            const clearForm = (deselect = true) => {
+                ['date_arrived', 'date_opened', 'date_expired'].forEach(dateField => {
+                    if (chemicalForm.elements[dateField]) chemicalForm.elements[dateField].value = formatDate(chemical[dateField]);
+                });
+
+                if (chemicalForm.elements['label']) {
+                    if (chemical.label === true) chemicalForm.elements['label'].value = 'true';
+                    else if (chemical.label === false) chemicalForm.elements['label'].value = 'false';
+                    else chemicalForm.elements['label'].value = '';
+                }
+            }
+            
+            function clearFormAndSelection() {
                 chemicalForm.reset();
                 docIdInput.value = '';
+                document.querySelectorAll('#inventory-table-body tr').forEach(r => r.classList.remove('row-selected'));
                 updateBtn.disabled = true;
                 deleteBtn.disabled = true;
-                if (deselect) {
-                    const selectedRow = document.querySelector('.table-row.selected');
-                    if (selectedRow) selectedRow.classList.remove('selected');
-                }
-            };
-            
-            const getSanitizedFormData = () => {
+            }
+
+            function getFormData() {
                 const formData = new FormData(chemicalForm);
-                const data = Object.fromEntries(formData.entries());
-                
-                if (data.label === 'true') data.label = true;
-                else if (data.label === 'false') data.label = false;
-                else data.label = null; 
-
-                ['date_arrived', 'date_opened', 'date_expired'].forEach(key => {
-                    if (data[key] === '') data[key] = null;
-                });
-                return data;
-            };
-
-            // --- Data Fetching and CRUD ---
-            const fetchInventory = async () => {
-                loadingIndicator.style.display = 'block';
-                loadingIndicator.textContent = 'Loading inventory...';
-                try {
-                    const { data, error } = await supabase.from(TABLE_NAME).select('*');
-                    if (error) throw error;
-                    
-                    allChemicals = data;
-                    renderTable(allChemicals);
-                    loadingIndicator.style.display = 'none';
-                } catch (error) {
-                    console.error("Failed to fetch inventory:", error);
-                    loadingIndicator.textContent = `Error loading inventory. Ensure RLS is disabled in Supabase. Details: ${error.message}`;
+                const chemicalData = {};
+                for (const [key, value] of formData.entries()) {
+                    if (value === '') chemicalData[key] = null;
+                    else chemicalData[key] = value;
                 }
-            };
-
-            const addChemical = async () => {
-                const data = getSanitizedFormData();
-                delete data.id; 
                 
-                if (!data.name || !data.cas_number) {
-                    showToast("Name and CAS Number are required.", "error");
+                if (chemicalData.label === 'true') chemicalData.label = true;
+                else if (chemicalData.label === 'false') chemicalData.label = false;
+                else chemicalData.label = null;
+
+                delete chemicalData.id; 
+                return chemicalData;
+            }
+
+            // --- CRUD Handlers ---
+            chemicalForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const chemicalData = getFormData();
+                if (!chemicalData.name || !chemicalData.cas_number) {
+                    showToast('Name and CAS Number are required.', 'error');
                     return;
                 }
+                const { data, error } = await supabase.from(TABLE_NAME).insert([chemicalData]).select();
+                if (error) {
+                    showToast(`Error adding chemical: ${error.message}`, 'error');
+                } else {
+                    showToast('Chemical added successfully!');
+                    chemicalsCache.push(data[0]);
+                    chemicalsCache.sort((a, b) => a.name.localeCompare(b.name));
+                    clearFormAndSelection();
+                    searchInput.dispatchEvent(new Event('input')); // Efficient re-render
+                }
+            });
+
+            updateBtn.addEventListener('click', async () => {
+                const id = docIdInput.value;
+                if (!id) return;
+                const chemicalData = getFormData();
                 
-                const { error } = await supabase.from(TABLE_NAME).insert([data]);
+                const { data, error } = await supabase.from(TABLE_NAME).update(chemicalData).eq('id', id).select();
                 
                 if (error) {
-                    console.error("Failed to add chemical:", error);
-                    showToast(`Error: ${error.message}`, "error");
+                    showToast(`Error updating: ${error.message}`, 'error');
                 } else {
-                    showToast("Chemical added successfully!", "success");
-                    clearForm();
-                    fetchInventory();
+                    showToast('Chemical updated successfully!');
+                    const index = chemicalsCache.findIndex(c => c.id == id);
+                    if (index !== -1) chemicalsCache[index] = data[0];
+                    clearFormAndSelection();
+                    searchInput.dispatchEvent(new Event('input'));
                 }
-            };
+            });
 
-            const updateChemical = async () => {
+            deleteBtn.addEventListener('click', async () => {
                 const id = docIdInput.value;
-                if (!id) {
-                    showToast("Please select a chemical to update.", "error");
-                    return;
-                }
-                const data = getSanitizedFormData();
-                delete data.id; 
+                if (!id) return;
                 
-                const { error } = await supabase.from(TABLE_NAME).update(data).eq('id', id);
-                
-                if (error) {
-                    console.error("Failed to update chemical:", error);
-                    showToast(`Error: ${error.message}`, "error");
-                } else {
-                    showToast("Chemical updated successfully!", "success");
-                    clearForm();
-                    fetchInventory();
-                }
-            };
-
-            const deleteChemical = async () => {
-                const id = docIdInput.value;
-                if (!id) {
-                    showToast("Please select a chemical to delete.", "error");
-                    return;
-                }
-                if (confirm("Are you sure you want to delete this chemical?")) {
+                if (confirm('Are you sure you want to delete this chemical?')) {
                     const { error } = await supabase.from(TABLE_NAME).delete().eq('id', id);
-                    
                     if (error) {
-                        console.error("Failed to delete chemical:", error);
-                        showToast(`Error: ${error.message}`, "error");
+                        showToast(`Error deleting: ${error.message}`, 'error');
                     } else {
-                        showToast("Chemical deleted successfully!", "success");
-                        clearForm();
-                        fetchInventory();
+                        showToast('Chemical deleted successfully!');
+                        chemicalsCache = chemicalsCache.filter(c => c.id != id);
+                        clearFormAndSelection();
+                        searchInput.dispatchEvent(new Event('input'));
                     }
                 }
-            };
+            });
 
-            // --- Event Listeners ---
-            document.getElementById('add-btn').addEventListener('click', (e) => { e.preventDefault(); addChemical(); });
-            document.getElementById('update-btn').addEventListener('click', (e) => { e.preventDefault(); updateChemical(); });
-            document.getElementById('delete-btn').addEventListener('click', (e) => { e.preventDefault(); deleteChemical(); });
-            document.getElementById('clear-btn').addEventListener('click', (e) => { e.preventDefault(); clearForm(true); });
+            clearFormBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearFormAndSelection();
+            });
+            
+            exportBtn.addEventListener('click', () => {
+                if (chemicalsCache.length === 0) return showToast('No data to export', 'error');
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Name,CAS,Location,Manufacturer,Quantity,Percent Full,Amount,Date Arrived,Label\n";
+                chemicalsCache.forEach(row => {
+                    const label = row.label === true ? 'Yes' : (row.label === false ? 'No' : '');
+                    const date = row.date_arrived ? row.date_arrived.split('T')[0] : '';
+                    // Escape commas in fields
+                    const escape = (val) => val ? `"${String(val).replace(/"/g, '""')}"` : '';
+                    csvContent += `${escape(row.name)},${escape(row.cas_number)},${escape(row.location)},${escape(row.manufacturer)},${escape(row.quantity)},${escape(row.percent_full)},${escape(row.amount)},${date},${label}\n`;
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "inventory.csv");
+                document.body.appendChild(link);
+                link.click();
+            });
 
-            searchBar.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                const filtered = allChemicals.filter(chem =>
-                    Object.values(chem).some(val => String(val).toLowerCase().includes(searchTerm))
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = chemicalsCache.filter(chem => 
+                    (chem.name && chem.name.toLowerCase().includes(term)) ||
+                    (chem.cas_number && chem.cas_number.toLowerCase().includes(term)) ||
+                    (chem.location && chem.location.toLowerCase().includes(term))
                 );
                 renderTable(filtered);
             });
