@@ -219,6 +219,37 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             try {
+                // --- Simple password protection (front-end only) ---
+                const ACCESS_PASSWORD = 'labpassword'; // <-- change this to whatever you want
+                let authenticated = false;
+                const maxAttempts = 3;
+
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    const input = prompt('Enter password to access the Chemical Inventory:');
+                    if (input === null) {
+                        // User pressed cancel
+                        break;
+                    }
+                    if (input === ACCESS_PASSWORD) {
+                        authenticated = true;
+                        break;
+                    } else {
+                        alert('Incorrect password. Please try again.');
+                    }
+                }
+
+                if (!authenticated) {
+                    document.body.innerHTML = `
+                        <div class="flex items-center justify-center h-screen bg-gray-100">
+                            <div class="text-center text-gray-700 text-lg">
+                                Access denied.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                // --- End password protection ---
+
                 // --- Supabase Configuration ---
                 // PASTE YOUR SUPABASE URL AND ANON KEY BELOW
                 // Make sure to paste them between the backticks (`)
