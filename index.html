@@ -481,8 +481,60 @@
         </div>
     </div>
 
+    <!-- History View Modal -->
+    <div id="history-modal-overlay"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] hidden flex justify-center items-center drop-shadow-2xl opacity-0 transition-opacity duration-300">
+        <div class="bg-white w-full max-w-4xl mx-4 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300"
+            id="history-modal-content">
 
-    <!-- Toast Container -->
+            <div class="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand"></i> Change History
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">Audit log of all chemical inventory additions, updates, and
+                        deletions.</p>
+                </div>
+                <button type="button" id="close-history-btn"
+                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto custom-scroll flex-grow bg-white">
+                <table class="w-full text-left">
+                    <thead class="sticky top-0 bg-white shadow-sm z-10">
+                        <tr>
+                            <th class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-600 text-sm">
+                                Timestamp</th>
+                            <th class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-600 text-sm">Action
+                            </th>
+                            <th class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-600 text-sm">
+                                Chemical</th>
+                            <th class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-600 text-sm">CAS
+                                Number</th>
+                            <th class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-600 text-sm">Details
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr>
+                            <td colspan="5" class="text-center py-10 text-slate-400"><i
+                                    class="fa-solid fa-spinner fa-spin mr-2"></i>Loading history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-xl flex justify-end">
+                <button type="button" id="close-history-footer-btn"
+                    class="py-2.5 px-6 btn-solid rounded-md text-sm font-semibold transition-colors">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div> <!-- Toast Container -->
     <div id="toast-container"></div>
 
     <!-- Top Navbar Banner -->
@@ -516,6 +568,12 @@
             <button type="button" id="open-add-modal-btn"
                 class="py-2 px-4 btn-solid rounded-md text-sm font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-plus"></i> New Chemical
+            </button>
+
+            <button type="button" id="view-history-btn"
+                class="py-2 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                title="View Change History">
+                <i class="fa-solid fa-clock-rotate-left"></i> History
             </button>
 
             <button type="button" id="export-btn"
@@ -676,6 +734,13 @@
                 const loadingRow = document.getElementById('loading-row');
                 const searchInput = document.getElementById('search-input');
                 const totalCountEl = document.getElementById('total-count');
+                const viewHistoryBtn = document.getElementById('view-history-btn');
+
+                // History Modal Elements
+                const historyModalOverlay = document.getElementById('history-modal-overlay');
+                const closeHistoryBtn = document.getElementById('close-history-btn');
+                const closeHistoryFooterBtn = document.getElementById('close-history-footer-btn');
+                const historyTableBody = document.getElementById('history-table-body');
 
                 // Modal Elements
                 const formModalOverlay = document.getElementById('form-modal-overlay');
@@ -757,6 +822,20 @@
                         });
                         locationFilterContainer.appendChild(button);
                     });
+                }
+
+                // --- Logging History Helper ---
+                async function logHistory(actionType, chemicalName, casNumber, details = '') {
+                    try {
+                        await supabase.from('inventory_history').insert([{
+                            action_type: actionType,
+                            chemical_name: chemicalName,
+                            cas_number: casNumber,
+                            details: details
+                        }]);
+                    } catch (e) {
+                        console.error('Failed to log history:', e);
+                    }
                 }
 
                 // --- Modal Logic ---
@@ -934,6 +1013,7 @@
                             showToast(error.message, 'error');
                         } else {
                             showToast('Record updated successfully!', 'success');
+                            await logHistory('UPDATE', chemicalData.name, chemicalData.cas_number, `Updated existing chemical (Prev: ${activeEditName})`);
                             const index = chemicalsCache.findIndex(c => c.name === activeEditName);
                             if (index !== -1) chemicalsCache[index] = data[0];
                             closeModal();
@@ -946,6 +1026,7 @@
                             showToast(error.message, 'error');
                         } else {
                             showToast('Chemical added successfully!', 'success');
+                            await logHistory('INSERT', chemicalData.name, chemicalData.cas_number, 'Added new chemical to inventory');
                             chemicalsCache.push(data[0]);
                             chemicalsCache.sort((a, b) => a.name.localeCompare(b.name));
                             closeModal();
@@ -974,6 +1055,7 @@
                             showToast(error.message, 'error');
                         } else {
                             showToast('Deleted successfully!', 'success');
+                            await logHistory('DELETE', activeEditName, '', 'Removed chemical from inventory');
                             chemicalsCache = chemicalsCache.filter(c => c.name !== activeEditName);
                             closeModal();
                             searchInput.dispatchEvent(new Event('input'));
@@ -1027,6 +1109,75 @@
                 });
 
 
+
+                // --- History Viewer Logic ---
+                function openHistoryModal() {
+                    historyModalOverlay.classList.remove('hidden');
+                    // Small delay to allow display flex to apply before opacity fades in
+                    setTimeout(() => {
+                        historyModalOverlay.classList.remove('opacity-0');
+                        historyModalOverlay.querySelector('#history-modal-content').classList.remove('scale-95');
+                        historyModalOverlay.querySelector('#history-modal-content').classList.add('scale-100');
+                    }, 10);
+                    loadHistory();
+                }
+
+                function closeHistoryModal() {
+                    historyModalOverlay.classList.add('opacity-0');
+                    historyModalOverlay.querySelector('#history-modal-content').classList.remove('scale-100');
+                    historyModalOverlay.querySelector('#history-modal-content').classList.add('scale-95');
+
+                    setTimeout(() => {
+                        historyModalOverlay.classList.add('hidden');
+                    }, 300);
+                }
+
+                async function loadHistory() {
+                    historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading history...</td></tr>';
+
+                    const { data, error } = await supabase
+                        .from('inventory_history')
+                        .select('*')
+                        .order('timestamp', { ascending: false })
+                        .limit(50); // Show last 50 changes
+
+                    if (error) {
+                        historyTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-red-500">Failed to load history: ${error.message}</td></tr>`;
+                        return;
+                    }
+
+                    if (!data || data.length === 0) {
+                        historyTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-10 text-slate-400">No change history found.</td></tr>';
+                        return;
+                    }
+
+                    historyTableBody.innerHTML = '';
+                    data.forEach(log => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100";
+
+                        let actionBadge = '';
+                        if (log.action_type === 'INSERT') actionBadge = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200">ADD</span>';
+                        else if (log.action_type === 'UPDATE') actionBadge = '<span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-xs font-bold border border-blue-200">UPDATE</span>';
+                        else if (log.action_type === 'DELETE') actionBadge = '<span class="px-2 py-0.5 rounded bg-red-100 text-red-800 text-xs font-bold border border-red-200">DELETE</span>';
+
+                        const dt = new Date(log.timestamp);
+                        const formattedDate = dt.toLocaleString();
+
+                        tr.innerHTML = `
+                            <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap">${formattedDate}</td>
+                            <td class="py-3 px-4">${actionBadge}</td>
+                            <td class="py-3 px-4 font-semibold text-slate-800">${log.chemical_name || '-'}</td>
+                            <td class="py-3 px-4 text-sm text-slate-500">${log.cas_number || '-'}</td>
+                            <td class="py-3 px-4 text-xs text-slate-500">${log.details || '-'}</td>
+                        `;
+                        historyTableBody.appendChild(tr);
+                    });
+                }
+
+                viewHistoryBtn.addEventListener('click', openHistoryModal);
+                closeHistoryBtn.addEventListener('click', closeHistoryModal);
+                closeHistoryFooterBtn.addEventListener('click', closeHistoryModal);
 
                 // --- Real-time Subscription ---
                 supabase.channel(`public:${TABLE_NAME}`)
