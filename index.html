@@ -195,7 +195,8 @@
             position: fixed;
             top: 5rem;
             right: 1.5rem;
-            z-index: 9999;
+            z-index: 10001;
+            /* Show above everything else */
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -528,6 +529,11 @@
     <!-- Main Table Container -->
     <main class="flex-grow bg-slate-50 p-6 overflow-hidden flex flex-col relative z-0">
 
+        <!-- Location Filter Tabs -->
+        <div id="location-filter-tabs" class="mb-4 shrink-0 flex items-center gap-2 overflow-x-auto custom-scroll pb-2">
+            <!-- Tabs are injected dynamically by Javascript based on database Locations -->
+        </div>
+
         <!-- Table Scroll Container -->
         <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-auto flex-grow custom-scroll">
 
@@ -685,6 +691,73 @@
 
                 let chemicalsCache = [];
                 let activeEditName = null; // Tracks if we are "updating" or "adding"
+                let currentSearchTerm = '';
+                let currentLocationFilter = 'all';
+
+                // --- Filter & Search Logic ---
+                function applyFilters() {
+                    let filtered = chemicalsCache;
+
+                    // 1. Apply Location Filter
+                    if (currentLocationFilter !== 'all') {
+                        filtered = filtered.filter(chem => {
+                            if (!chem.location) return false;
+                            const locLower = chem.location.toLowerCase();
+                            if (currentLocationFilter === 'refrigerator') {
+                                return locLower.includes('refriger') || locLower.includes('fridge');
+                            } else {
+                                const matchStr = currentLocationFilter.replace('inet', ''); // 'cabinet 1' -> 'cab 1'
+                                return locLower.includes(matchStr);
+                            }
+                        });
+                    }
+
+                    // 2. Apply Search Term
+                    if (currentSearchTerm) {
+                        filtered = filtered.filter(chem =>
+                            (chem.name && chem.name.toLowerCase().includes(currentSearchTerm)) ||
+                            (chem.cas_number && chem.cas_number.toLowerCase().includes(currentSearchTerm)) ||
+                            (chem.location && chem.location.toLowerCase().includes(currentSearchTerm)) ||
+                            (chem.manufacturer && chem.manufacturer.toLowerCase().includes(currentSearchTerm))
+                        );
+                    }
+
+                    renderTable(filtered);
+                }
+
+                // Search Input Event
+                searchInput.addEventListener('input', (e) => {
+                    currentSearchTerm = e.target.value.toLowerCase();
+                    applyFilters();
+                });
+
+                // --- Single Tier Location Filter Logic ---
+                const locationFilterContainer = document.getElementById('location-filter-tabs');
+                const MAIN_CABINETS = ['all', 'cabinet 1', 'cabinet 2', 'cabinet 3', 'cabinet 4', 'cabinet 5', 'cabinet 6', 'refrigerator'];
+
+                function renderLocationFilters() {
+                    if (!locationFilterContainer) return;
+
+                    locationFilterContainer.innerHTML = '<span class="text-sm font-bold text-slate-700 mr-2 shrink-0">Filter by Location:</span>';
+                    MAIN_CABINETS.forEach(loc => {
+                        const button = document.createElement('button');
+                        button.textContent = loc === 'all' ? 'All Locations' : loc.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                        button.className = "location-filter-btn text-xs py-1.5 px-4 rounded-full whitespace-nowrap transition-colors";
+
+                        if (currentLocationFilter === loc) {
+                            button.classList.add('bg-brand', 'text-white', 'btn-solid');
+                        } else {
+                            button.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300', 'btn-outline');
+                        }
+
+                        button.addEventListener('click', () => {
+                            currentLocationFilter = loc;
+                            renderLocationFilters();
+                            applyFilters();
+                        });
+                        locationFilterContainer.appendChild(button);
+                    });
+                }
 
                 // --- Modal Logic ---
                 // By grouping all variables and functions in this scope, populateForm gets found properly.
@@ -778,6 +851,7 @@
                     }
 
                     chemicalsCache = data || [];
+                    renderLocationFilters(); // Generate location tabs
                     renderTable(chemicalsCache);
                 }
 
@@ -952,17 +1026,7 @@
                     showToast('Export successful', 'success');
                 });
 
-                // Front end local search filter
-                searchInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    const filteredChemicals = chemicalsCache.filter(chem =>
-                        (chem.name && chem.name.toLowerCase().includes(searchTerm)) ||
-                        (chem.cas_number && chem.cas_number.toLowerCase().includes(searchTerm)) ||
-                        (chem.location && chem.location.toLowerCase().includes(searchTerm)) ||
-                        (chem.manufacturer && chem.manufacturer.toLowerCase().includes(searchTerm))
-                    );
-                    renderTable(filteredChemicals);
-                });
+
 
                 // --- Real-time Subscription ---
                 supabase.channel(`public:${TABLE_NAME}`)
